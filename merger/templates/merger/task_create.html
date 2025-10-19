@@ -1,0 +1,1273 @@
+{% extends 'base.html' %}
+
+{% block title %}创建任务 - Excel 合并工具{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>创建合并任务</h1>
+    <p>按照步骤配置您的Excel合并任务</p>
+</div>
+
+<div class="wizard">
+    <div class="wizard-steps">
+        <div class="wizard-step active" data-step="1">
+            <div class="step-indicator">1</div>
+            <span>基本信息</span>
+        </div>
+        <div class="wizard-step" data-step="2">
+            <div class="step-indicator">2</div>
+            <span>上传文件</span>
+        </div>
+        <div class="wizard-step" data-step="3">
+            <div class="step-indicator">3</div>
+            <span>列规则(可选)</span>
+        </div>
+        <div class="wizard-step" data-step="4">
+            <div class="step-indicator">4</div>
+            <span>单元格操作(可选)</span>
+        </div>
+        <div class="wizard-step" data-step="5">
+            <div class="step-indicator">5</div>
+            <span>列过滤(可选)</span>
+        </div>
+        <div class="wizard-step" data-step="6">
+            <div class="step-indicator">6</div>
+            <span>执行处理</span>
+        </div>
+    </div>
+
+    <div class="wizard-content">
+        <!-- 步骤 1: 基本信息 -->
+        <div class="wizard-panel active" data-panel="1">
+            <h2>第一步:基本信息</h2>
+            <div class="form-group">
+                <label for="task-name">任务名称 *</label>
+                <input type="text" id="task-name" class="form-control" placeholder="例如:2024学生信息合并" required>
+            </div>
+            <div class="form-group">
+                <label for="output-format">输出格式 *</label>
+                <select id="output-format" class="form-control">
+                    <option value="xlsx">XLSX (推荐,支持图片)</option>
+                    <option value="xls">XLS (Excel 2003 兼容)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="filter-mode">列过滤模式</label>
+                <select id="filter-mode" class="form-control" onchange="toggleFilterColumns()">
+                    <option value="none">不过滤列</option>
+                    <option value="keep">只保留指定列</option>
+                    <option value="remove">删除指定列</option>
+                </select>
+            </div>
+            
+            <div id="filter-columns-form" style="display:none">
+                <div class="form-group">
+                    <label for="filter-columns">列名列表 (每行一个)</label>
+                    <textarea id="filter-columns" class="form-control" rows="5" placeholder="例如:&#10;姓名&#10;学号&#10;成绩"></textarea>
+                    <small class="form-hint">输入要保留或删除的列名,每行一个列名</small>
+                </div>
+            </div>
+            
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-primary" onclick="createTask()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤 2: 上传文件 -->
+        <div class="wizard-panel" data-panel="2">
+            <h2>第二步:上传文件</h2>
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📤</div>
+                <p>点击选择文件或拖拽文件到此处</p>
+                <p class="upload-hint">支持 .xlsx 格式,可一次上传多个文件</p>
+                <input type="file" id="file-input" multiple accept=".xlsx" style="display:none">
+            </div>
+            <div class="file-list" id="file-list"></div>
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
+                <button type="button" class="btn btn-primary" onclick="nextStep()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤 3: 列规则 -->
+        <div class="wizard-panel" data-panel="3">
+            <h2>第三步:列派生规则(可选)</h2>
+            <p class="panel-hint">根据现有列的内容创建新列,例如从学号中提取班级信息</p>
+            
+            <!-- 功能说明 -->
+            <div class="help-box">
+                <h4>📖 功能说明</h4>
+                <p><strong>什么是列派生?</strong></p>
+                <p>从已有列中提取或转换信息,自动生成新列。常见应用:</p>
+                <ul>
+                    <li>从学号 "202401001" 中提取班级 "01" → 转换为 "一班"</li>
+                    <li>从身份证号提取出生年份或性别信息</li>
+                    <li>从商品编码提取类别代码并转换为类别名称</li>
+                </ul>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="enable-column-rule" onchange="toggleColumnRule()"> 启用列派生规则
+                </label>
+            </div>
+
+            <div id="column-rule-form" style="display:none">
+                <!-- 第一步:选择源列和新列名 -->
+                <div class="config-section">
+                    <h4>1️⃣ 基本配置</h4>
+                    <div class="form-group">
+                        <label for="source-column">源列名 * <span class="help-text">要从哪一列提取信息?</span></label>
+                        <input type="text" id="source-column" class="form-control" placeholder="例如:学号">
+                        <small class="form-hint">💡 输入Excel表格中已存在的列名,必须完全匹配</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-column">新列名 * <span class="help-text">生成的新列叫什么名字?</span></label>
+                        <input type="text" id="new-column" class="form-control" placeholder="例如:班级">
+                        <small class="form-hint">💡 这个新列会自动添加到合并后的表格中</small>
+                    </div>
+                </div>
+                
+                <!-- 第二步:子串提取(可选) -->
+                <div class="config-section">
+                    <h4>2️⃣ 子串提取(可选)</h4>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enable-extraction" onchange="toggleExtraction()"> 启用子串提取
+                        </label>
+                        <span class="help-text">如果只需要源列内容的一部分,勾选此项</span>
+                    </div>
+                </div>
+                
+                <div id="extraction-form" style="display:none">
+                    <div class="example-box">
+                        <strong>📝 示例:</strong> 学号 "202401001"
+                        <ul>
+                            <li>提取位置 1-4 → "2024" (年份)</li>
+                            <li>提取位置 5-6 → "01" (班级代码)</li>
+                            <li>提取位置 7-9 → "001" (学生编号)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="extraction-start">起始位置 <span class="help-text">从第几个字符开始?</span></label>
+                            <input type="number" id="extraction-start" class="form-control" placeholder="例如:5" min="1">
+                            <small class="form-hint">💡 第一个字符的位置是1</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="extraction-end">结束位置 <span class="help-text">到第几个字符结束?</span></label>
+                            <input type="number" id="extraction-end" class="form-control" placeholder="例如:6" min="1">
+                            <small class="form-hint">💡 <strong>包含</strong>这个位置的字符 (位置5-6会提取2个字符)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="extraction-one-indexed" checked> 使用1索引
+                            </label>
+                            <small class="form-hint">勾选:第1个字符位置是1<br>不勾选:第1个字符位置是0</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三步:映射规则(可选) -->
+                <div class="config-section">
+                    <h4>3️⃣ 映射规则(可选)</h4>
+                    <p class="help-text">将提取的内容转换为更易读的值</p>
+                    
+                    <div class="example-box">
+                        <strong>📝 示例场景:</strong>
+                        <table class="example-table">
+                            <tr>
+                                <th>提取结果</th>
+                                <th>→</th>
+                                <th>映射后</th>
+                                <th>说明</th>
+                            </tr>
+                            <tr>
+                                <td>"01"</td>
+                                <td>→</td>
+                                <td>"一班"</td>
+                                <td>模式: 01, 值: 一班</td>
+                            </tr>
+                            <tr>
+                                <td>"02"</td>
+                                <td>→</td>
+                                <td>"二班"</td>
+                                <td>模式: 02, 值: 二班</td>
+                            </tr>
+                            <tr>
+                                <td>"99"</td>
+                                <td>→</td>
+                                <td>"99"</td>
+                                <td>没有匹配规则,保持原样</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="mapping-instructions">
+                        <p><strong>📌 如何填写映射规则?</strong></p>
+                        <ol>
+                            <li><strong>模式:</strong> 要匹配的文本(如 "01", "02")</li>
+                            <li><strong>值:</strong> 转换后的文本(如 "一班", "二班")</li>
+                            <li><strong>匹配方式:</strong> 使用<strong>精确匹配</strong>,模式"01"只匹配"01",不匹配"001"或"0012"</li>
+                            <li><strong>快捷键:</strong> 填完一行按 <kbd>Tab</kbd> 或 <kbd>Enter</kbd> 自动添加下一行</li>
+                            <li><strong>提示:</strong> 如果没有匹配的规则,会保留提取的原始值</li>
+                        </ol>
+                        
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px;">
+                            <strong>⚠️ 重要提示 - 精确匹配:</strong>
+                            <ul style="margin: 5px 0 0 20px;">
+                                <li>✅ 模式 "01" 匹配 "01" → 正确</li>
+                                <li>❌ 模式 "01" 不匹配 "001" → 不会转换</li>
+                                <li>❌ 模式 "1" 不匹配 "01" 或 "10" → 不会转换</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="keyboard-shortcuts-help" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px; margin: 15px 0; border-radius: 4px;">
+                        <strong>⌨️ 键盘快捷键(类似Excel):</strong>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; font-size: 14px;">
+                            <div><kbd>↑</kbd> <kbd>↓</kbd> 上下移动</div>
+                            <div><kbd>←</kbd> <kbd>→</kbd> 左右移动</div>
+                            <div><kbd>Tab</kbd> 下一个字段</div>
+                            <div><kbd>Shift+Tab</kbd> 上一个字段</div>
+                            <div><kbd>Enter</kbd> 下一行/新增</div>
+                            <div><kbd>Ctrl+Enter</kbd> 插入行</div>
+                            <div><kbd>Ctrl+Del</kbd> 删除行</div>
+                            <div><kbd>↓</kbd> 在最后一行自动新增</div>
+                        </div>
+                    </div>
+                    
+                    <p class="form-hint">
+                        💡 提示: 使用键盘快捷键可以大幅提高输入效率,就像在Excel中一样!
+                    </p>
+                    <div id="mappings-container"></div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="addMapping()">+ 添加映射规则</button>
+                </div>
+                
+                <!-- 完整示例 -->
+                <div class="complete-example">
+                    <h4>🎯 完整示例</h4>
+                    <div class="example-card">
+                        <div class="example-header">场景: 从学号生成班级列</div>
+                        <div class="example-content">
+                            <div class="example-step">
+                                <strong>源数据:</strong>
+                                <pre>学号
+202401001
+202401002
+202402001
+202402002</pre>
+                            </div>
+                            <div class="example-step">
+                                <strong>配置:</strong>
+                                <ul>
+                                    <li>源列名: <code>学号</code></li>
+                                    <li>新列名: <code>班级</code></li>
+                                    <li>☑️ 启用子串提取
+                                        <ul>
+                                            <li>起始位置: <code>5</code></li>
+                                            <li>结束位置: <code>6</code></li>
+                                        </ul>
+                                    </li>
+                                    <li>映射规则:
+                                        <ul>
+                                            <li>模式: <code>01</code> → 值: <code>一班</code></li>
+                                            <li>模式: <code>02</code> → 值: <code>二班</code></li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="example-step">
+                                <strong>结果:</strong>
+                                <pre>学号        班级
+202401001   一班
+202401002   一班
+202402001   二班
+202402002   二班</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
+                <button type="button" class="btn btn-primary" onclick="saveColumnRuleAndNext()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤 4: 单元格操作 -->
+        <div class="wizard-panel" data-panel="4">
+            <h2>第四步:单元格批量操作(可选)</h2>
+            <p class="panel-hint">对指定列的单元格进行统一修改</p>
+            <p class="form-hint">
+                💡 快捷键: <kbd>Tab</kbd> 下一个 | <kbd>Enter</kbd> 新增行 | <kbd>Ctrl+Del</kbd> 删除行
+            </p>
+            
+            <div id="operations-container"></div>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addOperation()">+ 添加操作</button>
+
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
+                <button type="button" class="btn btn-primary" onclick="saveCellOperationsAndNext()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤 5: 执行处理 -->
+        <div class="wizard-panel" data-panel="5">
+            <h2>第五步:执行处理</h2>
+            <div class="summary">
+                <h3>任务配置汇总</h3>
+                <div class="summary-item">
+                    <span class="summary-label">任务名称:</span>
+                    <span id="summary-name"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">输出格式:</span>
+                    <span id="summary-format"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">文件数量:</span>
+                    <span id="summary-files"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">列过滤:</span>
+                    <span id="summary-filter"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">列规则:</span>
+                    <span id="summary-rule"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">操作数量:</span>
+                    <span id="summary-ops"></span>
+                </div>
+            </div>
+
+            <div id="process-status" class="process-status"></div>
+
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
+                <button type="button" class="btn btn-success btn-lg" id="process-btn" onclick="processTask()">开始处理</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTaskId = null;
+let currentStep = 1;
+let uploadedFiles = [];
+let mappings = [];
+let operations = [];
+
+// 页面加载时检查URL参数
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskId = urlParams.get('task_id');
+    
+    if (taskId) {
+        loadExistingTask(taskId);
+    }
+});
+
+// 步骤导航
+function nextStep() {
+    if (currentStep < 5) {
+        currentStep++;
+        updateWizard();
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        updateWizard();
+    }
+}
+
+function updateWizard() {
+    document.querySelectorAll('.wizard-step').forEach(step => {
+        const stepNum = parseInt(step.dataset.step);
+        step.classList.toggle('active', stepNum === currentStep);
+        step.classList.toggle('completed', stepNum < currentStep);
+    });
+    
+    document.querySelectorAll('.wizard-panel').forEach(panel => {
+        panel.classList.toggle('active', parseInt(panel.dataset.panel) === currentStep);
+    });
+
+    if (currentStep === 5) {
+        updateSummary();
+    }
+}
+
+// 切换列过滤表单显示
+function toggleFilterColumns() {
+    const filterMode = document.getElementById('filter-mode').value;
+    const filterColumnsForm = document.getElementById('filter-columns-form');
+    filterColumnsForm.style.display = (filterMode === 'none') ? 'none' : 'block';
+}
+
+// 切换列派生规则表单显示
+function toggleColumnRule() {
+    const form = document.getElementById('column-rule-form');
+    const button = event.target;
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        button.textContent = '隐藏配置表单';
+    } else {
+        form.style.display = 'none';
+        button.textContent = '显示配置表单';
+    }
+}
+
+// 切换提取规则表单显示
+function toggleExtraction() {
+    const form = document.getElementById('extraction-form');
+    const button = event.target;
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        button.textContent = '隐藏提取规则';
+    } else {
+        form.style.display = 'none';
+        button.textContent = '显示提取规则';
+    }
+}
+
+// 创建任务
+function createTask() {
+    // 如果已有任务ID,直接跳到下一步
+    if (currentTaskId) {
+        nextStep();
+        return;
+    }
+    
+    const name = document.getElementById('task-name').value.trim();
+    if (!name) {
+        alert('请输入任务名称');
+        return;
+    }
+
+    const outputFormat = document.getElementById('output-format').value;
+    const filterMode = document.getElementById('filter-mode').value;
+    
+    // 获取列过滤列表
+    let filterColumns = [];
+    if (filterMode !== 'none') {
+        const columnsText = document.getElementById('filter-columns').value.trim();
+        if (columnsText) {
+            filterColumns = columnsText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+        }
+    }
+
+    fetch('/api/tasks/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ 
+            name, 
+            output_format: outputFormat,
+            filter_mode: filterMode,
+            filter_columns: filterColumns
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentTaskId = data.task_id;
+            nextStep();
+        } else {
+            alert('创建任务失败: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('创建任务失败: ' + error);
+    });
+}
+
+// 文件上传事件绑定
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFiles);
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles({ target: { files: e.dataTransfer.files } });
+    });
+
+    // 列规则开关
+    document.getElementById('enable-column-rule').addEventListener('change', function() {
+        document.getElementById('column-rule-form').style.display = this.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('enable-extraction').addEventListener('change', function() {
+        document.getElementById('extraction-form').style.display = this.checked ? 'block' : 'none';
+    });
+});
+
+function handleFiles(e) {
+    const files = Array.from(e.target.files);
+    const formData = new FormData();
+    formData.append('task_id', currentTaskId);
+    
+    files.forEach(file => {
+        formData.append('files', file);
+    });
+
+    fetch(`/api/tasks/${currentTaskId}/upload/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles = uploadedFiles.concat(data.files);
+            updateFileList();
+        } else {
+            alert('上传失败: ' + data.error);
+        }
+    });
+}
+
+function updateFileList() {
+    const fileList = document.getElementById('file-list');
+    fileList.innerHTML = uploadedFiles.map(file => `
+        <div class="file-item">
+            <span class="file-icon">📄</span>
+            <span class="file-name">${file.name}</span>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteFile(${file.id})">删除</button>
+        </div>
+    `).join('');
+}
+
+function deleteFile(fileId) {
+    if (!confirm('确定要删除这个文件吗?')) return;
+    
+    fetch(`/api/files/${fileId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+            updateFileList();
+        } else {
+            alert('删除失败: ' + data.error);
+        }
+    });
+}
+
+// 列规则
+function addMapping() {
+    const container = document.getElementById('mappings-container');
+    const index = mappings.length;
+    const div = document.createElement('div');
+    div.className = 'mapping-item';
+    div.innerHTML = `
+        <input type="text" placeholder="模式" class="form-control mapping-pattern" data-index="${index}" onkeydown="handleMappingKeydown(event, ${index}, 'pattern')">
+        <input type="text" placeholder="值" class="form-control mapping-value" data-index="${index}" onkeydown="handleMappingKeydown(event, ${index}, 'value')">
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeMapping(${index})">删除</button>
+    `;
+    container.appendChild(div);
+    mappings.push({ pattern: '', value: '' });
+    
+    // 自动聚焦到新添加的模式输入框
+    setTimeout(() => {
+        const newInput = div.querySelector('.mapping-pattern');
+        if (newInput) newInput.focus();
+    }, 0);
+}
+
+function removeMapping(index) {
+    const items = document.querySelectorAll('.mapping-item');
+    if (items.length > 0 && items[index]) {
+        items[index].remove();
+        mappings.splice(index, 1);
+        // 更新剩余项的索引
+        updateMappingIndices();
+    }
+}
+
+// 在指定索引后插入新的映射行
+function insertMappingAfter(index) {
+    const container = document.getElementById('mappings-container');
+    const items = Array.from(document.querySelectorAll('.mapping-item'));
+    const newIndex = index + 1;
+    
+    const div = document.createElement('div');
+    div.className = 'mapping-item';
+    div.innerHTML = `
+        <input type="text" placeholder="模式" class="form-control mapping-pattern" data-index="${newIndex}" onkeydown="handleMappingKeydown(event, ${newIndex}, 'pattern')">
+        <input type="text" placeholder="值" class="form-control mapping-value" data-index="${newIndex}" onkeydown="handleMappingKeydown(event, ${newIndex}, 'value')">
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeMapping(${newIndex})">删除</button>
+    `;
+    
+    // 在指定位置插入
+    if (index < items.length - 1) {
+        items[index].after(div);
+    } else {
+        container.appendChild(div);
+    }
+    
+    mappings.splice(newIndex, 0, { pattern: '', value: '' });
+    updateMappingIndices();
+    
+    // 聚焦到新行的模式输入框
+    setTimeout(() => {
+        const newInput = div.querySelector('.mapping-pattern');
+        if (newInput) newInput.focus();
+    }, 0);
+}
+
+// 更新所有映射项的索引
+function updateMappingIndices() {
+    const items = document.querySelectorAll('.mapping-item');
+    items.forEach((item, idx) => {
+        const patternInput = item.querySelector('.mapping-pattern');
+        const valueInput = item.querySelector('.mapping-value');
+        const deleteBtn = item.querySelector('button');
+        
+        if (patternInput) {
+            patternInput.setAttribute('data-index', idx);
+            patternInput.setAttribute('onkeydown', `handleMappingKeydown(event, ${idx}, 'pattern')`);
+        }
+        if (valueInput) {
+            valueInput.setAttribute('data-index', idx);
+            valueInput.setAttribute('onkeydown', `handleMappingKeydown(event, ${idx}, 'value')`);
+        }
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `removeMapping(${idx})`);
+        }
+    });
+}
+
+// 处理键盘事件,实现类似Excel的导航和自动填充
+function handleMappingKeydown(event, index, field) {
+    const items = document.querySelectorAll('.mapping-item');
+    const currentItem = items[index];
+    if (!currentItem) return;
+    
+    // Tab键:移动到下一个输入框,如果是最后一个值输入框则自动添加新行
+    if (event.key === 'Tab' && !event.shiftKey) {
+        if (field === 'value') {
+            event.preventDefault();
+            // 如果是最后一行,添加新行
+            if (index === items.length - 1) {
+                addMapping();
+            } else {
+                // 否则移动到下一行的模式输入框
+                const nextItem = items[index + 1];
+                const nextInput = nextItem?.querySelector('.mapping-pattern');
+                if (nextInput) nextInput.focus();
+            }
+        }
+        // 如果是模式输入框,默认行为会移动到值输入框
+    }
+    
+    // Shift+Tab键:移动到上一个输入框
+    if (event.key === 'Tab' && event.shiftKey) {
+        if (field === 'pattern' && index > 0) {
+            event.preventDefault();
+            const prevItem = items[index - 1];
+            const prevInput = prevItem?.querySelector('.mapping-value');
+            if (prevInput) prevInput.focus();
+        }
+    }
+    
+    // Enter键:移动到下一行或添加新行
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        if (field === 'pattern') {
+            // 在模式输入框按Enter,移动到值输入框
+            const valueInput = currentItem.querySelector('.mapping-value');
+            if (valueInput) valueInput.focus();
+        } else {
+            // 在值输入框按Enter,移动到下一行或添加新行
+            if (index === items.length - 1) {
+                addMapping();
+            } else {
+                const nextItem = items[index + 1];
+                const nextInput = nextItem?.querySelector('.mapping-pattern');
+                if (nextInput) nextInput.focus();
+            }
+        }
+    }
+    
+    // 方向键上:移动到上一行
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (index > 0) {
+            const prevItem = items[index - 1];
+            const prevInput = prevItem?.querySelector(`.mapping-${field}`);
+            if (prevInput) prevInput.focus();
+        }
+    }
+    
+    // 方向键下:移动到下一行
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (index < items.length - 1) {
+            const nextItem = items[index + 1];
+            const nextInput = nextItem?.querySelector(`.mapping-${field}`);
+            if (nextInput) nextInput.focus();
+        } else {
+            // 如果是最后一行,添加新行
+            addMapping();
+        }
+    }
+    
+    // 方向键左:移动到模式输入框(仅当光标在开头时)
+    if (event.key === 'ArrowLeft' && field === 'value' && event.target.selectionStart === 0) {
+        event.preventDefault();
+        const patternInput = currentItem.querySelector('.mapping-pattern');
+        if (patternInput) {
+            patternInput.focus();
+            patternInput.selectionStart = patternInput.value.length;
+            patternInput.selectionEnd = patternInput.value.length;
+        }
+    }
+    
+    // 方向键右:移动到值输入框(仅当光标在末尾时)
+    if (event.key === 'ArrowRight' && field === 'pattern' && 
+        event.target.selectionStart === event.target.value.length) {
+        event.preventDefault();
+        const valueInput = currentItem.querySelector('.mapping-value');
+        if (valueInput) {
+            valueInput.focus();
+            valueInput.selectionStart = 0;
+            valueInput.selectionEnd = 0;
+        }
+    }
+    
+    // Ctrl+Delete:删除当前行(但至少保留一行)
+    if (event.key === 'Delete' && event.ctrlKey && items.length > 1) {
+        event.preventDefault();
+        removeMapping(index);
+        // 聚焦到上一行或下一行
+        const nextIndex = index > 0 ? index - 1 : 0;
+        setTimeout(() => {
+            const nextItem = document.querySelectorAll('.mapping-item')[nextIndex];
+            if (nextItem) {
+                const focusInput = nextItem.querySelector(`.mapping-${field}`);
+                if (focusInput) focusInput.focus();
+            }
+        }, 0);
+    }
+    
+    // Ctrl+Enter:快速在当前行下方插入新行
+    if (event.key === 'Enter' && event.ctrlKey) {
+        event.preventDefault();
+        insertMappingAfter(index);
+    }
+}
+
+function saveColumnRuleAndNext() {
+    if (!document.getElementById('enable-column-rule').checked) {
+        nextStep();
+        return;
+    }
+
+    const sourceColumn = document.getElementById('source-column').value;
+    const newColumn = document.getElementById('new-column').value;
+
+    if (!sourceColumn || !newColumn) {
+        alert('请填写源列名和新列名');
+        return;
+    }
+
+    // 收集映射
+    const mappingElements = document.querySelectorAll('.mapping-pattern');
+    const mappings = Array.from(mappingElements).map((el, i) => ({
+        pattern: el.value,
+        value: document.querySelectorAll('.mapping-value')[i].value
+    })).filter(m => m.pattern && m.value);
+
+    const ruleData = {
+        name: '列规则',
+        source_column: sourceColumn,
+        new_column: newColumn,
+        mappings: mappings
+    };
+
+    if (document.getElementById('enable-extraction').checked) {
+        ruleData.extraction_start = parseInt(document.getElementById('extraction-start').value);
+        ruleData.extraction_end = parseInt(document.getElementById('extraction-end').value);
+        ruleData.extraction_one_indexed = document.getElementById('extraction-one-indexed').checked;
+    }
+
+    fetch(`/api/tasks/${currentTaskId}/column-rule/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(ruleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            nextStep();
+        } else {
+            alert('保存列规则失败: ' + data.error);
+        }
+    });
+}
+
+// 单元格操作
+function addOperation() {
+    const container = document.getElementById('operations-container');
+    const index = operations.length;
+    const div = document.createElement('div');
+    div.className = 'operation-item';
+    div.innerHTML = `
+        <div class="form-row">
+            <input type="text" placeholder="列名" class="form-control op-column" data-index="${index}" onkeydown="handleOperationKeydown(event, ${index}, 'column')">
+            <select class="form-control op-action" data-index="${index}" onkeydown="handleOperationKeydown(event, ${index}, 'action')">
+                <option value="add_prefix">添加前缀</option>
+                <option value="add_suffix">添加后缀</option>
+                <option value="remove_prefix">删除前缀</option>
+                <option value="remove_suffix">删除后缀</option>
+                <option value="replace">替换文本</option>
+            </select>
+            <input type="text" placeholder="值" class="form-control op-value" data-index="${index}" onkeydown="handleOperationKeydown(event, ${index}, 'value')">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeOperation(${index})">删除</button>
+        </div>
+    `;
+    container.appendChild(div);
+    operations.push({});
+    
+    // 自动聚焦到新添加的列名输入框
+    setTimeout(() => {
+        const newInput = div.querySelector('.op-column');
+        if (newInput) newInput.focus();
+    }, 0);
+}
+
+function removeOperation(index) {
+    const items = document.querySelectorAll('.operation-item');
+    if (items.length > 0 && items[index]) {
+        items[index].remove();
+        operations.splice(index, 1);
+        // 更新剩余项的索引
+        updateOperationIndices();
+    }
+}
+
+// 在指定索引后插入新的操作行
+function insertOperationAfter(index) {
+    const container = document.getElementById('operations-container');
+    const items = Array.from(document.querySelectorAll('.operation-item'));
+    const newIndex = index + 1;
+    
+    const div = document.createElement('div');
+    div.className = 'operation-item';
+    div.innerHTML = `
+        <div class="form-row">
+            <input type="text" placeholder="列名" class="form-control op-column" data-index="${newIndex}" onkeydown="handleOperationKeydown(event, ${newIndex}, 'column')">
+            <select class="form-control op-action" data-index="${newIndex}" onkeydown="handleOperationKeydown(event, ${newIndex}, 'action')">
+                <option value="add_prefix">添加前缀</option>
+                <option value="add_suffix">添加后缀</option>
+                <option value="remove_prefix">删除前缀</option>
+                <option value="remove_suffix">删除后缀</option>
+                <option value="replace">替换文本</option>
+            </select>
+            <input type="text" placeholder="值" class="form-control op-value" data-index="${newIndex}" onkeydown="handleOperationKeydown(event, ${newIndex}, 'value')">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeOperation(${newIndex})">删除</button>
+        </div>
+    `;
+    
+    // 在指定位置插入
+    if (index < items.length - 1) {
+        items[index].after(div);
+    } else {
+        container.appendChild(div);
+    }
+    
+    operations.splice(newIndex, 0, {});
+    updateOperationIndices();
+    
+    // 聚焦到新行的列名输入框
+    setTimeout(() => {
+        const newInput = div.querySelector('.op-column');
+        if (newInput) newInput.focus();
+    }, 0);
+}
+
+// 更新所有操作项的索引
+function updateOperationIndices() {
+    const items = document.querySelectorAll('.operation-item');
+    items.forEach((item, idx) => {
+        const columnInput = item.querySelector('.op-column');
+        const actionSelect = item.querySelector('.op-action');
+        const valueInput = item.querySelector('.op-value');
+        const deleteBtn = item.querySelector('button');
+        
+        if (columnInput) {
+            columnInput.setAttribute('data-index', idx);
+            columnInput.setAttribute('onkeydown', `handleOperationKeydown(event, ${idx}, 'column')`);
+        }
+        if (actionSelect) {
+            actionSelect.setAttribute('data-index', idx);
+            actionSelect.setAttribute('onkeydown', `handleOperationKeydown(event, ${idx}, 'action')`);
+        }
+        if (valueInput) {
+            valueInput.setAttribute('data-index', idx);
+            valueInput.setAttribute('onkeydown', `handleOperationKeydown(event, ${idx}, 'value')`);
+        }
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `removeOperation(${idx})`);
+        }
+    });
+}
+
+// 处理单元格操作的键盘事件 - 类似Excel的导航
+function handleOperationKeydown(event, index, field) {
+    const items = document.querySelectorAll('.operation-item');
+    const currentItem = items[index];
+    if (!currentItem) return;
+    
+    // Tab键:移动到下一个输入框
+    if (event.key === 'Tab' && !event.shiftKey) {
+        if (field === 'value') {
+            event.preventDefault();
+            // 如果是最后一行,添加新行
+            if (index === items.length - 1) {
+                addOperation();
+            } else {
+                // 否则移动到下一行的列名输入框
+                const nextItem = items[index + 1];
+                const nextInput = nextItem?.querySelector('.op-column');
+                if (nextInput) nextInput.focus();
+            }
+        }
+    }
+    
+    // Shift+Tab键:移动到上一个输入框
+    if (event.key === 'Tab' && event.shiftKey) {
+        if (field === 'column' && index > 0) {
+            event.preventDefault();
+            const prevItem = items[index - 1];
+            const prevInput = prevItem?.querySelector('.op-value');
+            if (prevInput) prevInput.focus();
+        }
+    }
+    
+    // Enter键:移动到下一个字段或下一行
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        if (field === 'column') {
+            const actionSelect = currentItem.querySelector('.op-action');
+            if (actionSelect) actionSelect.focus();
+        } else if (field === 'action') {
+            const valueInput = currentItem.querySelector('.op-value');
+            if (valueInput) valueInput.focus();
+        } else if (field === 'value') {
+            // 在值输入框按Enter,移动到下一行或添加新行
+            if (index === items.length - 1) {
+                addOperation();
+            } else {
+                const nextItem = items[index + 1];
+                const nextInput = nextItem?.querySelector('.op-column');
+                if (nextInput) nextInput.focus();
+            }
+        }
+    }
+    
+    // 方向键上:移动到上一行
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (index > 0) {
+            const prevItem = items[index - 1];
+            const prevInput = prevItem?.querySelector(`.op-${field}`);
+            if (prevInput) prevInput.focus();
+        }
+    }
+    
+    // 方向键下:移动到下一行
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (index < items.length - 1) {
+            const nextItem = items[index + 1];
+            const nextInput = nextItem?.querySelector(`.op-${field}`);
+            if (nextInput) nextInput.focus();
+        } else {
+            // 如果是最后一行,添加新行
+            addOperation();
+        }
+    }
+    
+    // 方向键左:移动到上一个字段(仅当光标在开头时)
+    if (event.key === 'ArrowLeft' && event.target.selectionStart === 0) {
+        event.preventDefault();
+        if (field === 'action') {
+            const columnInput = currentItem.querySelector('.op-column');
+            if (columnInput) {
+                columnInput.focus();
+                columnInput.selectionStart = columnInput.value.length;
+                columnInput.selectionEnd = columnInput.value.length;
+            }
+        } else if (field === 'value') {
+            const actionSelect = currentItem.querySelector('.op-action');
+            if (actionSelect) actionSelect.focus();
+        }
+    }
+    
+    // 方向键右:移动到下一个字段(仅当光标在末尾时)
+    if (event.key === 'ArrowRight') {
+        const atEnd = field === 'action' || 
+                     (event.target.selectionStart === event.target.value.length);
+        if (atEnd) {
+            event.preventDefault();
+            if (field === 'column') {
+                const actionSelect = currentItem.querySelector('.op-action');
+                if (actionSelect) actionSelect.focus();
+            } else if (field === 'action') {
+                const valueInput = currentItem.querySelector('.op-value');
+                if (valueInput) {
+                    valueInput.focus();
+                    valueInput.selectionStart = 0;
+                    valueInput.selectionEnd = 0;
+                }
+            }
+        }
+    }
+    
+    // Ctrl+Delete:删除当前行(但至少保留一行)
+    if (event.key === 'Delete' && event.ctrlKey && items.length > 1) {
+        event.preventDefault();
+        removeOperation(index);
+        // 聚焦到上一行或下一行
+        const nextIndex = index > 0 ? index - 1 : 0;
+        setTimeout(() => {
+            const nextItem = document.querySelectorAll('.operation-item')[nextIndex];
+            if (nextItem) {
+                const focusInput = nextItem.querySelector(`.op-${field}`);
+                if (focusInput) focusInput.focus();
+            }
+        }, 0);
+    }
+    
+    // Ctrl+Enter:快速在当前行下方插入新行
+    if (event.key === 'Enter' && event.ctrlKey) {
+        event.preventDefault();
+        insertOperationAfter(index);
+    }
+}
+
+function saveCellOperationsAndNext() {
+    const opElements = document.querySelectorAll('.operation-item');
+    const operations = Array.from(opElements).map((el, i) => {
+        const column = el.querySelector('.op-column').value;
+        const action = el.querySelector('.op-action').value;
+        const value = el.querySelector('.op-value').value;
+        return { column, action, value };
+    }).filter(op => op.column);
+
+    if (operations.length === 0) {
+        nextStep();
+        return;
+    }
+
+    fetch(`/api/tasks/${currentTaskId}/cell-operations/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            operations: operations
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            nextStep();
+        } else {
+            alert('保存操作失败: ' + data.error);
+        }
+    });
+}
+
+// 汇总
+function updateSummary() {
+    document.getElementById('summary-name').textContent = document.getElementById('task-name').value;
+    document.getElementById('summary-format').textContent = document.getElementById('output-format').value.toUpperCase();
+    document.getElementById('summary-files').textContent = uploadedFiles.length + ' 个文件';
+    
+    // 列过滤信息
+    const filterMode = document.getElementById('filter-mode').value;
+    const filterModeText = {
+        'none': '不过滤',
+        'keep': '只保留指定列',
+        'remove': '删除指定列'
+    };
+    let filterText = filterModeText[filterMode] || '不过滤';
+    if (filterMode !== 'none') {
+        const columnsText = document.getElementById('filter-columns').value.trim();
+        const columnCount = columnsText ? columnsText.split('\n').filter(l => l.trim()).length : 0;
+        filterText += ` (${columnCount}列)`;
+    }
+    document.getElementById('summary-filter').textContent = filterText;
+    
+    document.getElementById('summary-rule').textContent = document.getElementById('enable-column-rule').checked ? '已启用' : '未启用';
+    document.getElementById('summary-ops').textContent = document.querySelectorAll('.operation-item').length + ' 个操作';
+}
+
+// 处理任务
+function processTask() {
+    const btn = document.getElementById('process-btn');
+    btn.disabled = true;
+    btn.textContent = '处理中...';
+
+    const statusDiv = document.getElementById('process-status');
+    statusDiv.innerHTML = '<div class="processing">正在处理,请稍候...</div>';
+
+    fetch(`/api/tasks/${currentTaskId}/process/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="success">
+                    <h3>✅ 处理完成!</h3>
+                    <p><a href="${data.download_url}" class="btn btn-success">下载结果文件</a></p>
+                    <p><a href="/tasks/${currentTaskId}/" class="btn btn-secondary">查看任务详情</a></p>
+                </div>
+            `;
+        } else {
+            statusDiv.innerHTML = `<div class="error">处理失败: ${data.error}</div>`;
+            btn.disabled = false;
+            btn.textContent = '重新处理';
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = `<div class="error">处理失败: ${error}</div>`;
+        btn.disabled = false;
+        btn.textContent = '重新处理';
+    });
+}
+
+// 获取 CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// 加载已有任务
+function loadExistingTask(taskId) {
+    fetch(`/api/tasks/${taskId}/status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const task = data.task;
+                
+                // 设置任务ID
+                currentTaskId = task.id;
+                
+                // 填充任务信息
+                document.getElementById('task-name').value = task.name;
+                document.getElementById('output-format').value = task.output_format;
+                
+                // 填充列过滤配置
+                if (task.filter_mode) {
+                    document.getElementById('filter-mode').value = task.filter_mode;
+                    toggleFilterColumns();
+                    if (task.filter_columns && task.filter_columns.length > 0) {
+                        document.getElementById('filter-columns').value = task.filter_columns.join('\n');
+                    }
+                }
+                
+                // 填充文件列表
+                uploadedFiles = task.files;
+                updateFileList();
+                
+                // 填充列规则
+                if (task.column_rule) {
+                    const rule = task.column_rule;
+                    document.getElementById('enable-column-rule').checked = true;
+                    document.getElementById('column-rule-form').style.display = 'block';
+                    document.getElementById('source-column').value = rule.source_column;
+                    document.getElementById('new-column').value = rule.new_column;
+                    
+                    if (rule.extraction_start !== null) {
+                        document.getElementById('enable-extraction').checked = true;
+                        document.getElementById('extraction-form').style.display = 'block';
+                        document.getElementById('extraction-start').value = rule.extraction_start;
+                        document.getElementById('extraction-end').value = rule.extraction_end;
+                        document.getElementById('extraction-one-indexed').checked = rule.extraction_one_indexed;
+                    }
+                    
+                    // 填充映射规则
+                    rule.mappings.forEach(mapping => {
+                        addMapping();
+                        const index = mappings.length - 1;
+                        document.querySelectorAll('.mapping-pattern')[index].value = mapping.pattern;
+                        document.querySelectorAll('.mapping-value')[index].value = mapping.value;
+                    });
+                }
+                
+                // 填充单元格操作
+                task.operations.forEach(op => {
+                    addOperation();
+                    const index = operations.length - 1;
+                    const opItem = document.querySelectorAll('.operation-item')[index];
+                    opItem.querySelector('.op-column').value = op.column;
+                    opItem.querySelector('.op-action').value = op.action;
+                    opItem.querySelector('.op-value').value = op.value || '';
+                });
+                
+                alert('已加载任务数据,可以继续修改配置并处理');
+            } else {
+                alert('加载任务失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('加载任务失败: ' + error);
+        });
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Excel 合并工具{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <a href="{% url 'index' %}">📊 Excel 合并工具</a>
+            </div>
+            <div class="navbar-menu">
+                <a href="{% url 'index' %}" class="nav-item">首页</a>
+                <a href="{% url 'task_list' %}" class="nav-item">任务列表</a>
+                <a href="{% url 'task_create' %}" class="nav-item">创建任务</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Excel 合并工具 v3.0 | 支持 XLS/XLSX 格式 | 智能列对齐 | 批量操作</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

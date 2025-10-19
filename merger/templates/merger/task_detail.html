@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.name }} - 任务详情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ task.name }}</h1>
+    <div class="header-actions">
+        {% if task.result_file %}
+        <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-success">下载结果</a>
+        {% endif %}
+        <button class="btn btn-danger" onclick="deleteTask({{ task.id }})">删除任务</button>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <h3>基本信息</h3>
+        <div class="detail-item">
+            <span class="label">状态:</span>
+            <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="label">输出格式:</span>
+            <span>{{ task.output_format|upper }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="label">列过滤:</span>
+            <span>
+                {% if task.filter_mode == 'none' %}
+                    不过滤
+                {% elif task.filter_mode == 'keep' %}
+                    只保留指定列 ({{ task.filter_columns|length }} 列)
+                {% elif task.filter_mode == 'remove' %}
+                    删除指定列 ({{ task.filter_columns|length }} 列)
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="label">创建时间:</span>
+            <span>{{ task.created_at|date:"Y-m-d H:i:s" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="label">更新时间:</span>
+            <span>{{ task.updated_at|date:"Y-m-d H:i:s" }}</span>
+        </div>
+        {% if task.error_message %}
+        <div class="detail-item error">
+            <span class="label">错误信息:</span>
+            <span>{{ task.error_message }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-card">
+        <h3>上传文件 ({{ task.files.count }})</h3>
+        <ul class="file-list">
+            {% for file in task.files.all %}
+            <li>
+                <span class="file-icon">📄</span>
+                {{ file.original_filename }}
+            </li>
+            {% empty %}
+            <li class="empty">未上传文件</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if task.filter_mode != 'none' and task.filter_columns %}
+    <div class="detail-card">
+        <h3>过滤列列表</h3>
+        <ul class="file-list">
+            {% for col in task.filter_columns %}
+            <li>{{ col }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if task.column_rule %}
+    <div class="detail-card">
+        <h3>列派生规则</h3>
+        <div class="detail-item">
+            <span class="label">源列:</span>
+            <span>{{ task.column_rule.source_column }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="label">新列:</span>
+            <span>{{ task.column_rule.new_column }}</span>
+        </div>
+        {% if task.column_rule.extraction_start %}
+        <div class="detail-item">
+            <span class="label">提取范围:</span>
+            <span>{{ task.column_rule.extraction_start }} - {{ task.column_rule.extraction_end }}</span>
+        </div>
+        {% endif %}
+        <div class="detail-item">
+            <span class="label">映射规则:</span>
+            <span>{{ task.column_rule.mappings|length }} 条</span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if task.cell_operations.count > 0 %}
+    <div class="detail-card">
+        <h3>单元格操作 ({{ task.cell_operations.count }})</h3>
+        <ul class="operation-list">
+            {% for op in task.cell_operations.all %}
+            <li>
+                <strong>{{ op.column }}</strong>: {{ op.get_action_display }}
+                {% if op.value %}- {{ op.value }}{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function deleteTask(taskId) {
+    if (!confirm('确定要删除此任务吗?删除后无法恢复。')) {
+        return;
+    }
+
+    fetch(`/api/tasks/${taskId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('任务已删除');
+            window.location.href = '/tasks/';
+        } else {
+            alert('删除失败: ' + data.error);
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

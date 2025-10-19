@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}任务列表 - Excel 合并工具{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>任务列表</h1>
+    <a href="{% url 'task_create' %}" class="btn btn-primary">创建新任务</a>
+</div>
+
+<div class="task-table">
+    <table>
+        <thead>
+            <tr>
+                <th>任务名称</th>
+                <th>状态</th>
+                <th>输出格式</th>
+                <th>文件数量</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td><a href="{% url 'task_detail' task.id %}">{{ task.name }}</a></td>
+                <td><span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span></td>
+                <td>{{ task.output_format|upper }}</td>
+                <td>{{ task.files.count }}</td>
+                <td>{{ task.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <a href="{% url 'task_detail' task.id %}" class="btn btn-sm">查看</a>
+                    {% if task.status == 'pending' or task.status == 'failed' %}
+                    <a href="{% url 'task_create' %}?task_id={{ task.id }}" class="btn btn-sm btn-primary">继续处理</a>
+                    {% endif %}
+                    {% if task.result_file %}
+                    <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-sm btn-success">下载</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="empty-state">暂无任务</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

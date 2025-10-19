@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}首页 - Excel 合并工具{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Excel 文件合并与处理工具</h1>
+    <p class="hero-subtitle">快速合并多个 Excel 文件,支持智能列对齐、列派生、单元格批量操作</p>
+    <div class="hero-actions">
+        <a href="{% url 'task_create' %}" class="btn btn-primary btn-lg">开始使用</a>
+        <a href="{% url 'task_list' %}" class="btn btn-secondary btn-lg">查看任务</a>
+    </div>
+</div>
+
+<div class="features">
+    <h2>核心功能</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📁</div>
+            <h3>批量合并</h3>
+            <p>一次上传多个 Excel 文件,自动合并为一个文件</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3>智能对齐</h3>
+            <p>自动识别相同列名,智能对齐不同结构的表格</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">➕</div>
+            <h3>列派生</h3>
+            <p>根据现有列特征自动生成新列(如学号→班级)</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">✏️</div>
+            <h3>批量操作</h3>
+            <p>对单元格进行批量修改:前后缀、替换、插入删除</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3>多格式支持</h3>
+            <p>支持输出为 XLS 和 XLSX 格式,兼容性强</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🖼️</div>
+            <h3>图片保留</h3>
+            <p>自动识别并保留表格中的嵌入图片(XLSX)</p>
+        </div>
+    </div>
+</div>
+
+<div class="recent-tasks">
+    <h2>最近任务</h2>
+    {% if tasks %}
+    <div class="task-list-simple">
+        {% for task in tasks %}
+        <div class="task-item">
+            <div class="task-info">
+                <h3>{{ task.name }}</h3>
+                <span class="task-status status-{{ task.status }}">{{ task.get_status_display }}</span>
+            </div>
+            <div class="task-actions">
+                <a href="{% url 'task_detail' task.id %}" class="btn btn-sm">查看</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">暂无任务,<a href="{% url 'task_create' %}">创建第一个任务</a></p>
+    {% endif %}
+</div>
+
+<div class="how-to-use">
+    <h2>使用流程</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>创建任务</h3>
+            <p>点击"开始使用",输入任务名称并选择输出格式</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>上传文件</h3>
+            <p>上传需要合并的 Excel 文件(.xlsx 格式)</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>配置规则(可选)</h3>
+            <p>添加列派生规则或单元格操作</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>执行处理</h3>
+            <p>点击"开始处理",等待任务完成</p>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <h3>下载结果</h3>
+            <p>任务完成后下载合并后的文件</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
