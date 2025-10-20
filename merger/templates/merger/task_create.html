@@ -12,7 +12,7 @@
     <div class="wizard-steps">
         <div class="wizard-step active" data-step="1">
             <div class="step-indicator">1</div>
-            <span>基本信息</span>
+            <span>基本配置</span>
         </div>
         <div class="wizard-step" data-step="2">
             <div class="step-indicator">2</div>
@@ -20,306 +20,342 @@
         </div>
         <div class="wizard-step" data-step="3">
             <div class="step-indicator">3</div>
-            <span>列规则(可选)</span>
+            <span>数据预览清洗</span>
         </div>
         <div class="wizard-step" data-step="4">
             <div class="step-indicator">4</div>
-            <span>单元格操作(可选)</span>
+            <span>高级设置</span>
         </div>
         <div class="wizard-step" data-step="5">
             <div class="step-indicator">5</div>
-            <span>列过滤(可选)</span>
-        </div>
-        <div class="wizard-step" data-step="6">
-            <div class="step-indicator">6</div>
-            <span>执行处理</span>
+            <span>确认执行</span>
         </div>
     </div>
 
     <div class="wizard-content">
-        <!-- 步骤 1: 基本信息 -->
+        <!-- 步骤 1: 基本配置 -->
         <div class="wizard-panel active" data-panel="1">
-            <h2>第一步:基本信息</h2>
-            <div class="form-group">
-                <label for="task-name">任务名称 *</label>
-                <input type="text" id="task-name" class="form-control" placeholder="例如:2024学生信息合并" required>
-            </div>
-            <div class="form-group">
-                <label for="output-format">输出格式 *</label>
-                <select id="output-format" class="form-control">
-                    <option value="xlsx">XLSX (推荐,支持图片)</option>
-                    <option value="xls">XLS (Excel 2003 兼容)</option>
-                </select>
-            </div>
+            <h2><i class="fas fa-cog"></i> 基本配置</h2>
+            <p class="panel-hint">设置任务名称和输出格式</p>
             
-            <div class="form-group">
-                <label for="filter-mode">列过滤模式</label>
-                <select id="filter-mode" class="form-control" onchange="toggleFilterColumns()">
-                    <option value="none">不过滤列</option>
-                    <option value="keep">只保留指定列</option>
-                    <option value="remove">删除指定列</option>
-                </select>
-            </div>
-            
-            <div id="filter-columns-form" style="display:none">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="task-name"><i class="fas fa-tag"></i> 任务名称 *</label>
+                    <input type="text" id="task-name" class="form-control" placeholder="例如:2024学生信息合并" required>
+                </div>
                 <div class="form-group">
-                    <label for="filter-columns">列名列表 (每行一个)</label>
-                    <textarea id="filter-columns" class="form-control" rows="5" placeholder="例如:&#10;姓名&#10;学号&#10;成绩"></textarea>
-                    <small class="form-hint">输入要保留或删除的列名,每行一个列名</small>
+                    <label for="output-format"><i class="fas fa-file-export"></i> 输出格式 *</label>
+                    <select id="output-format" class="form-control">
+                        <option value="xlsx">XLSX (Excel 2007+,推荐)</option>
+                        <option value="xls">XLS (Excel 2003兼容)</option>
+                        <option value="csv">CSV (通用文本格式)</option>
+                        <option value="json">JSON (程序接口格式)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4><i class="fas fa-filter"></i> 列过滤设置 (可选)</h4>
+                <div class="form-group">
+                    <label for="filter-mode">过滤模式</label>
+                    <select id="filter-mode" class="form-control" onchange="toggleFilterColumns()">
+                        <option value="none">不过滤列 (保留所有列)</option>
+                        <option value="keep">只保留指定列</option>
+                        <option value="remove">删除指定列</option>
+                    </select>
+                </div>
+                
+                <div id="filter-columns-form" style="display:none">
+                    <div class="form-group">
+                        <label for="filter-columns">列名列表 (每行一个)</label>
+                        <textarea id="filter-columns" class="form-control" rows="4" placeholder="姓名&#10;学号&#10;成绩"></textarea>
+                        <small class="form-hint"><i class="fas fa-info-circle"></i> 输入列名,每行一个</small>
+                    </div>
                 </div>
             </div>
             
             <div class="wizard-actions">
-                <button type="button" class="btn btn-primary" onclick="createTask()">下一步</button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="createTask()">
+                    <i class="fas fa-arrow-right"></i> 下一步
+                </button>
             </div>
         </div>
 
         <!-- 步骤 2: 上传文件 -->
         <div class="wizard-panel" data-panel="2">
-            <h2>第二步:上传文件</h2>
+            <h2><i class="fas fa-cloud-upload-alt"></i> 上传文件</h2>
+            <p class="panel-hint">上传需要合并的 Excel 文件 (支持 .xlsx 格式)</p>
+            
             <div class="upload-area" id="upload-area">
                 <div class="upload-icon">📤</div>
-                <p>点击选择文件或拖拽文件到此处</p>
-                <p class="upload-hint">支持 .xlsx 格式,可一次上传多个文件</p>
-                <input type="file" id="file-input" multiple accept=".xlsx" style="display:none">
+                <p><strong>点击选择文件</strong> 或 <strong>拖拽文件</strong>到此处</p>
+                <p class="upload-hint"><i class="fas fa-info-circle"></i> 支持 XLSX, XLS, CSV, JSON 格式，可一次上传多个文件</p>
+                <input type="file" id="file-input" multiple accept=".xlsx,.xls,.csv,.json" style="display:none">
             </div>
             <div class="file-list" id="file-list"></div>
+            
             <div class="wizard-actions">
-                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
-                <button type="button" class="btn btn-primary" onclick="nextStep()">下一步</button>
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> 上一步
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="nextStep()">
+                    <i class="fas fa-arrow-right"></i> 下一步
+                </button>
             </div>
         </div>
 
-        <!-- 步骤 3: 列规则 -->
+        <!-- 步骤 3: 数据预览与清洗 -->
         <div class="wizard-panel" data-panel="3">
-            <h2>第三步:列派生规则(可选)</h2>
-            <p class="panel-hint">根据现有列的内容创建新列,例如从学号中提取班级信息</p>
+            <h2><i class="fas fa-table"></i> 数据预览与清洗</h2>
+            <p class="panel-hint">预览上传的文件数据并配置清洗规则 (可选)</p>
             
-            <!-- 功能说明 -->
-            <div class="help-box">
-                <h4>📖 功能说明</h4>
-                <p><strong>什么是列派生?</strong></p>
-                <p>从已有列中提取或转换信息,自动生成新列。常见应用:</p>
-                <ul>
-                    <li>从学号 "202401001" 中提取班级 "01" → 转换为 "一班"</li>
-                    <li>从身份证号提取出生年份或性别信息</li>
-                    <li>从商品编码提取类别代码并转换为类别名称</li>
-                </ul>
-            </div>
-            
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="enable-column-rule" onchange="toggleColumnRule()"> 启用列派生规则
-                </label>
+            <!-- 模板管理 -->
+            <div class="config-section">
+                <h3><i class="fas fa-save"></i> 配置模板管理</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">保存当前配置为模板，或加载已保存的配置</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="template-select">应用模板</label>
+                        <select id="template-select" class="form-control" onchange="loadSelectedTemplate()">
+                            <option value="">-- 选择模板 --</option>
+                        </select>
+                        <small class="form-hint"><i class="fas fa-info-circle"></i> 选择模板将自动填充所有配置</small>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-secondary" onclick="loadTemplatesList()">
+                            <i class="fas fa-sync"></i> 刷新模板列表
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="template-name-input">保存为新模板</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="template-name-input" class="form-control" placeholder="输入模板名称">
+                        <button type="button" class="btn btn-primary" onclick="saveCurrentTemplate()">
+                            <i class="fas fa-save"></i> 保存模板
+                        </button>
+                    </div>
+                    <small class="form-hint"><i class="fas fa-lightbulb"></i> 将当前所有配置保存为可复用的模板</small>
+                </div>
             </div>
 
-            <div id="column-rule-form" style="display:none">
-                <!-- 第一步:选择源列和新列名 -->
-                <div class="config-section">
-                    <h4>1️⃣ 基本配置</h4>
+            <!-- 文件预览 -->
+            <div class="config-section" style="margin-top: 2rem;">
+                <h3><i class="fas fa-eye"></i> 文件预览</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">点击文件预览数据前100行，查看数据类型和空值统计</p>
+                
+                <div id="preview-files-list" class="preview-files-list">
+                    <!-- 动态生成文件列表 -->
+                </div>
+            </div>
+
+            <!-- 数据清洗规则 -->
+            <div class="config-section" style="margin-top: 2rem;">
+                <h3><i class="fas fa-broom"></i> 数据清洗规则</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">配置去重、填充空值、格式标准化等清洗规则</p>
+                
+                <div id="cleaning-rules-container">
+                    <!-- 动态生成清洗规则 -->
+                </div>
+                
+                <div class="form-row" style="margin-top: 1rem;">
                     <div class="form-group">
-                        <label for="source-column">源列名 * <span class="help-text">要从哪一列提取信息?</span></label>
-                        <input type="text" id="source-column" class="form-control" placeholder="例如:学号">
-                        <small class="form-hint">💡 输入Excel表格中已存在的列名,必须完全匹配</small>
+                        <label for="cleaning-rule-type">规则类型</label>
+                        <select id="cleaning-rule-type" class="form-control">
+                            <option value="remove_duplicates">去除重复行</option>
+                            <option value="fill_null">填充空值</option>
+                            <option value="trim_whitespace">去除空格</option>
+                            <option value="standardize_case">标准化大小写</option>
+                            <option value="standardize_date">标准化日期</option>
+                            <option value="remove_special_chars">移除特殊字符</option>
+                            <option value="standardize_phone">标准化电话号码</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="new-column">新列名 * <span class="help-text">生成的新列叫什么名字?</span></label>
-                        <input type="text" id="new-column" class="form-control" placeholder="例如:班级">
-                        <small class="form-hint">💡 这个新列会自动添加到合并后的表格中</small>
+                        <label for="cleaning-rule-column">应用列</label>
+                        <input type="text" id="cleaning-rule-column" class="form-control" placeholder="列名 (留空=全部)">
+                    </div>
+                    <div class="form-group">
+                        <label for="cleaning-rule-params">参数 (JSON)</label>
+                        <input type="text" id="cleaning-rule-params" class="form-control" placeholder='例: {"value": "未知"}'>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-secondary" onclick="addCleaningRuleToList()">
+                            <i class="fas fa-plus"></i> 添加规则
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据验证规则 -->
+            <div class="config-section" style="margin-top: 2rem;">
+                <h3><i class="fas fa-check-circle"></i> 数据验证规则</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">配置数据类型检查、范围验证、正则表达式匹配等规则</p>
+                
+                <div id="validation-rules-container">
+                    <!-- 动态生成验证规则 -->
+                </div>
+                
+                <div class="form-row" style="margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="validation-rule-type">验证类型</label>
+                        <select id="validation-rule-type" class="form-control">
+                            <option value="type_check">类型检查</option>
+                            <option value="range_check">范围验证</option>
+                            <option value="regex_match">正则匹配</option>
+                            <option value="not_null">非空检查</option>
+                            <option value="unique">唯一性检查</option>
+                            <option value="length_check">长度检查</option>
+                            <option value="enum_check">枚举值检查</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="validation-rule-column">验证列 *</label>
+                        <input type="text" id="validation-rule-column" class="form-control" placeholder="列名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="validation-rule-params">参数 (JSON)</label>
+                        <input type="text" id="validation-rule-params" class="form-control" placeholder='例: {"type": "int"}'>
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="button" class="btn btn-secondary" onclick="addValidationRuleToList()">
+                            <i class="fas fa-plus"></i> 添加验证
+                        </button>
                     </div>
                 </div>
                 
-                <!-- 第二步:子串提取(可选) -->
-                <div class="config-section">
-                    <h4>2️⃣ 子串提取(可选)</h4>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="enable-extraction" onchange="toggleExtraction()"> 启用子串提取
-                        </label>
-                        <span class="help-text">如果只需要源列内容的一部分,勾选此项</span>
-                    </div>
+                <div style="margin-top: 1rem;">
+                    <button type="button" class="btn btn-primary" onclick="runDataValidation()">
+                        <i class="fas fa-play"></i> 运行数据验证
+                    </button>
+                    <div id="validation-results" style="margin-top: 1rem;"></div>
                 </div>
+            </div>
+            
+            <div class="wizard-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> 上一步
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="nextStep()">
+                    <i class="fas fa-arrow-right"></i> 下一步
+                </button>
+            </div>
+        </div>
+
+        <!-- 步骤 4: 高级设置 -->
+        <div class="wizard-panel" data-panel="4">
+            <h2><i class="fas fa-magic"></i> 高级设置</h2>
+            <p class="panel-hint">配置列派生规则和单元格批量操作 (可选)</p>
+            
+            <!-- 列派生规则 -->
+            <div class="config-section">
+                <h3><i class="fas fa-columns"></i> 列派生规则</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">根据现有列的内容创建新列,例如从学号中提取班级信息</p>
                 
-                <div id="extraction-form" style="display:none">
-                    <div class="example-box">
-                        <strong>📝 示例:</strong> 学号 "202401001"
-                        <ul>
-                            <li>提取位置 1-4 → "2024" (年份)</li>
-                            <li>提取位置 5-6 → "01" (班级代码)</li>
-                            <li>提取位置 7-9 → "001" (学生编号)</li>
-                        </ul>
-                    </div>
-                    
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="enable-column-rule" onchange="toggleColumnRule()" style="width: auto;">
+                        <span><strong>启用列派生规则</strong></span>
+                    </label>
+                    <small class="form-hint">
+                        <i class="fas fa-lightbulb"></i> 从已有列提取信息生成新列,如从学号"202401001"提取"01"转为"一班"
+                    </small>
+                </div>
+
+                <div id="column-rule-form" style="display:none; margin-top: 1rem;">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="extraction-start">起始位置 <span class="help-text">从第几个字符开始?</span></label>
-                            <input type="number" id="extraction-start" class="form-control" placeholder="例如:5" min="1">
-                            <small class="form-hint">💡 第一个字符的位置是1</small>
+                            <label for="source-column">源列名 *</label>
+                            <input type="text" id="source-column" class="form-control" placeholder="例如:学号">
                         </div>
                         <div class="form-group">
-                            <label for="extraction-end">结束位置 <span class="help-text">到第几个字符结束?</span></label>
-                            <input type="number" id="extraction-end" class="form-control" placeholder="例如:6" min="1">
-                            <small class="form-hint">💡 <strong>包含</strong>这个位置的字符 (位置5-6会提取2个字符)</small>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="extraction-one-indexed" checked> 使用1索引
-                            </label>
-                            <small class="form-hint">勾选:第1个字符位置是1<br>不勾选:第1个字符位置是0</small>
+                            <label for="new-column">新列名 *</label>
+                            <input type="text" id="new-column" class="form-control" placeholder="例如:班级">
                         </div>
                     </div>
-                </div>
+                    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="enable-extraction" onchange="toggleExtraction()" style="width: auto;">
+                            <span>启用子串提取</span>
+                        </label>
+                        <small class="form-hint"><i class="fas fa-cut"></i> 只提取源列内容的一部分</small>
+                    </div>
+                    
+                    <div id="extraction-form" style="display:none; margin-top: 1rem;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="extraction-start">起始位置</label>
+                                <input type="number" id="extraction-start" class="form-control" placeholder="5" min="1">
+                                <small class="form-hint">第一个字符位置为1</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="extraction-end">结束位置</label>
+                                <input type="number" id="extraction-end" class="form-control" placeholder="6" min="1">
+                                <small class="form-hint">包含该位置字符</small>
+                            </div>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="extraction-one-indexed" checked style="width: auto;"> 
+                                    1索引
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- 第三步:映射规则(可选) -->
-                <div class="config-section">
-                    <h4>3️⃣ 映射规则(可选)</h4>
-                    <p class="help-text">将提取的内容转换为更易读的值</p>
                     
-                    <div class="example-box">
-                        <strong>📝 示例场景:</strong>
-                        <table class="example-table">
-                            <tr>
-                                <th>提取结果</th>
-                                <th>→</th>
-                                <th>映射后</th>
-                                <th>说明</th>
-                            </tr>
-                            <tr>
-                                <td>"01"</td>
-                                <td>→</td>
-                                <td>"一班"</td>
-                                <td>模式: 01, 值: 一班</td>
-                            </tr>
-                            <tr>
-                                <td>"02"</td>
-                                <td>→</td>
-                                <td>"二班"</td>
-                                <td>模式: 02, 值: 二班</td>
-                            </tr>
-                            <tr>
-                                <td>"99"</td>
-                                <td>→</td>
-                                <td>"99"</td>
-                                <td>没有匹配规则,保持原样</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="mapping-instructions">
-                        <p><strong>📌 如何填写映射规则?</strong></p>
-                        <ol>
-                            <li><strong>模式:</strong> 要匹配的文本(如 "01", "02")</li>
-                            <li><strong>值:</strong> 转换后的文本(如 "一班", "二班")</li>
-                            <li><strong>匹配方式:</strong> 使用<strong>精确匹配</strong>,模式"01"只匹配"01",不匹配"001"或"0012"</li>
-                            <li><strong>快捷键:</strong> 填完一行按 <kbd>Tab</kbd> 或 <kbd>Enter</kbd> 自动添加下一行</li>
-                            <li><strong>提示:</strong> 如果没有匹配的规则,会保留提取的原始值</li>
-                        </ol>
-                        
-                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px;">
-                            <strong>⚠️ 重要提示 - 精确匹配:</strong>
-                            <ul style="margin: 5px 0 0 20px;">
-                                <li>✅ 模式 "01" 匹配 "01" → 正确</li>
-                                <li>❌ 模式 "01" 不匹配 "001" → 不会转换</li>
-                                <li>❌ 模式 "1" 不匹配 "01" 或 "10" → 不会转换</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="keyboard-shortcuts-help" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px; margin: 15px 0; border-radius: 4px;">
-                        <strong>⌨️ 键盘快捷键(类似Excel):</strong>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; font-size: 14px;">
-                            <div><kbd>↑</kbd> <kbd>↓</kbd> 上下移动</div>
-                            <div><kbd>←</kbd> <kbd>→</kbd> 左右移动</div>
-                            <div><kbd>Tab</kbd> 下一个字段</div>
-                            <div><kbd>Shift+Tab</kbd> 上一个字段</div>
-                            <div><kbd>Enter</kbd> 下一行/新增</div>
-                            <div><kbd>Ctrl+Enter</kbd> 插入行</div>
-                            <div><kbd>Ctrl+Del</kbd> 删除行</div>
-                            <div><kbd>↓</kbd> 在最后一行自动新增</div>
-                        </div>
-                    </div>
-                    
-                    <p class="form-hint">
-                        💡 提示: 使用键盘快捷键可以大幅提高输入效率,就像在Excel中一样!
-                    </p>
-                    <div id="mappings-container"></div>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="addMapping()">+ 添加映射规则</button>
-                </div>
-                
-                <!-- 完整示例 -->
-                <div class="complete-example">
-                    <h4>🎯 完整示例</h4>
-                    <div class="example-card">
-                        <div class="example-header">场景: 从学号生成班级列</div>
-                        <div class="example-content">
-                            <div class="example-step">
-                                <strong>源数据:</strong>
-                                <pre>学号
-202401001
-202401002
-202402001
-202402002</pre>
-                            </div>
-                            <div class="example-step">
-                                <strong>配置:</strong>
-                                <ul>
-                                    <li>源列名: <code>学号</code></li>
-                                    <li>新列名: <code>班级</code></li>
-                                    <li>☑️ 启用子串提取
-                                        <ul>
-                                            <li>起始位置: <code>5</code></li>
-                                            <li>结束位置: <code>6</code></li>
-                                        </ul>
-                                    </li>
-                                    <li>映射规则:
-                                        <ul>
-                                            <li>模式: <code>01</code> → 值: <code>一班</code></li>
-                                            <li>模式: <code>02</code> → 值: <code>二班</code></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="example-step">
-                                <strong>结果:</strong>
-                                <pre>学号        班级
-202401001   一班
-202401002   一班
-202402001   二班
-202402002   二班</pre>
-                            </div>
-                        </div>
+                    <div style="margin-top: 1rem;">
+                        <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                            <i class="fas fa-exchange-alt"></i> 映射规则 (将提取值转换)
+                        </label>
+                        <p class="form-hint" style="margin-bottom: 1rem;">
+                            例如: "01" → "一班", "02" → "二班"。
+                            快捷键: <kbd>Tab</kbd> 下一个 | <kbd>Enter</kbd> 新增 | <kbd>Ctrl+Del</kbd> 删除
+                        </p>
+                        <div id="mappings-container"></div>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="addMapping()">
+                            <i class="fas fa-plus"></i> 添加映射
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="wizard-actions">
-                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
-                <button type="button" class="btn btn-primary" onclick="saveColumnRuleAndNext()">下一步</button>
-            </div>
-        </div>
-
-        <!-- 步骤 4: 单元格操作 -->
-        <div class="wizard-panel" data-panel="4">
-            <h2>第四步:单元格批量操作(可选)</h2>
-            <p class="panel-hint">对指定列的单元格进行统一修改</p>
-            <p class="form-hint">
-                💡 快捷键: <kbd>Tab</kbd> 下一个 | <kbd>Enter</kbd> 新增行 | <kbd>Ctrl+Del</kbd> 删除行
-            </p>
             
-            <div id="operations-container"></div>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="addOperation()">+ 添加操作</button>
+            <!-- 单元格批量操作 -->
+            <div class="config-section" style="margin-top: 2rem;">
+                <h3><i class="fas fa-edit"></i> 单元格批量操作</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">对指定列的所有单元格进行统一修改</p>
+                
+                <p class="form-hint" style="margin-bottom: 1rem;">
+                    <i class="fas fa-keyboard"></i> 快捷键: <kbd>Tab</kbd> 下一个 | <kbd>Enter</kbd> 新增 | <kbd>Ctrl+Del</kbd> 删除
+                </p>
+                
+                <div id="operations-container"></div>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="addOperation()">
+                    <i class="fas fa-plus"></i> 添加操作
+                </button>
+            </div>
 
             <div class="wizard-actions">
-                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
-                <button type="button" class="btn btn-primary" onclick="saveCellOperationsAndNext()">下一步</button>
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> 上一步
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" onclick="saveAllAndNext()">
+                    <i class="fas fa-arrow-right"></i> 下一步
+                </button>
             </div>
         </div>
 
-        <!-- 步骤 5: 执行处理 -->
+        <!-- 步骤 5: 确认执行 -->
         <div class="wizard-panel" data-panel="5">
-            <h2>第五步:执行处理</h2>
+            <h2><i class="fas fa-check-circle"></i> 确认执行</h2>
             <div class="summary">
-                <h3>任务配置汇总</h3>
+                <h3><i class="fas fa-list-check"></i> 任务配置汇总</h3>
                 <div class="summary-item">
                     <span class="summary-label">任务名称:</span>
                     <span id="summary-name"></span>
@@ -337,6 +373,14 @@
                     <span id="summary-filter"></span>
                 </div>
                 <div class="summary-item">
+                    <span class="summary-label">清洗规则:</span>
+                    <span id="summary-cleaning"></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">验证规则:</span>
+                    <span id="summary-validation"></span>
+                </div>
+                <div class="summary-item">
                     <span class="summary-label">列规则:</span>
                     <span id="summary-rule"></span>
                 </div>
@@ -349,8 +393,15 @@
             <div id="process-status" class="process-status"></div>
 
             <div class="wizard-actions">
-                <button type="button" class="btn btn-secondary" onclick="previousStep()">上一步</button>
-                <button type="button" class="btn btn-success btn-lg" id="process-btn" onclick="processTask()">开始处理</button>
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> 上一步
+                </button>
+                <button type="button" class="btn btn-success btn-lg" id="process-btn" onclick="processTask()">
+                    <i class="fas fa-play"></i> 开始处理
+                </button>
+                <button type="button" class="btn btn-info" onclick="generateChartsForTask()" style="margin-left: 1rem;">
+                    <i class="fas fa-chart-bar"></i> 生成统计图表
+                </button>
             </div>
         </div>
     </div>
@@ -362,6 +413,8 @@ let currentStep = 1;
 let uploadedFiles = [];
 let mappings = [];
 let operations = [];
+let cleaningRulesList = [];
+let validationRulesList = [];
 
 // 页面加载时检查URL参数
 window.addEventListener('DOMContentLoaded', function() {
@@ -371,6 +424,9 @@ window.addEventListener('DOMContentLoaded', function() {
     if (taskId) {
         loadExistingTask(taskId);
     }
+    
+    // 加载模板列表
+    loadTemplatesList();
 });
 
 // 步骤导航
@@ -378,6 +434,11 @@ function nextStep() {
     if (currentStep < 5) {
         currentStep++;
         updateWizard();
+        
+        // 进入步骤3时，更新文件预览列表
+        if (currentStep === 3) {
+            updatePreviewFilesList();
+        }
     }
 }
 
@@ -788,56 +849,91 @@ function handleMappingKeydown(event, index, field) {
     }
 }
 
-function saveColumnRuleAndNext() {
-    if (!document.getElementById('enable-column-rule').checked) {
-        nextStep();
-        return;
-    }
+// 保存列规则和单元格操作,然后进入下一步
+function saveAllAndNext() {
+    const promises = [];
+    
+    // 保存列派生规则
+    if (document.getElementById('enable-column-rule').checked) {
+        const sourceColumn = document.getElementById('source-column').value;
+        const newColumn = document.getElementById('new-column').value;
 
-    const sourceColumn = document.getElementById('source-column').value;
-    const newColumn = document.getElementById('new-column').value;
-
-    if (!sourceColumn || !newColumn) {
-        alert('请填写源列名和新列名');
-        return;
-    }
-
-    // 收集映射
-    const mappingElements = document.querySelectorAll('.mapping-pattern');
-    const mappings = Array.from(mappingElements).map((el, i) => ({
-        pattern: el.value,
-        value: document.querySelectorAll('.mapping-value')[i].value
-    })).filter(m => m.pattern && m.value);
-
-    const ruleData = {
-        name: '列规则',
-        source_column: sourceColumn,
-        new_column: newColumn,
-        mappings: mappings
-    };
-
-    if (document.getElementById('enable-extraction').checked) {
-        ruleData.extraction_start = parseInt(document.getElementById('extraction-start').value);
-        ruleData.extraction_end = parseInt(document.getElementById('extraction-end').value);
-        ruleData.extraction_one_indexed = document.getElementById('extraction-one-indexed').checked;
-    }
-
-    fetch(`/api/tasks/${currentTaskId}/column-rule/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(ruleData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            nextStep();
-        } else {
-            alert('保存列规则失败: ' + data.error);
+        if (!sourceColumn || !newColumn) {
+            alert('请填写源列名和新列名');
+            return;
         }
-    });
+
+        const mappingElements = document.querySelectorAll('.mapping-pattern');
+        const mappings = Array.from(mappingElements).map((el, i) => ({
+            pattern: el.value,
+            value: document.querySelectorAll('.mapping-value')[i].value
+        })).filter(m => m.pattern && m.value);
+
+        const ruleData = {
+            name: '列规则',
+            source_column: sourceColumn,
+            new_column: newColumn,
+            mappings: mappings
+        };
+
+        if (document.getElementById('enable-extraction').checked) {
+            ruleData.extraction_start = parseInt(document.getElementById('extraction-start').value);
+            ruleData.extraction_end = parseInt(document.getElementById('extraction-end').value);
+            ruleData.extraction_one_indexed = document.getElementById('extraction-one-indexed').checked;
+        }
+
+        promises.push(
+            fetch(`/api/tasks/${currentTaskId}/column-rule/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(ruleData)
+            }).then(response => response.json())
+        );
+    }
+    
+    // 保存单元格操作
+    const opElements = document.querySelectorAll('.operation-item');
+    const operations = Array.from(opElements).map((el, i) => {
+        const column = el.querySelector('.op-column').value;
+        const action = el.querySelector('.op-action').value;
+        const value = el.querySelector('.op-value').value;
+        return { column, action, value };
+    }).filter(op => op.column);
+
+    if (operations.length > 0) {
+        promises.push(
+            fetch(`/api/tasks/${currentTaskId}/cell-operations/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ operations: operations })
+            }).then(response => response.json())
+        );
+    }
+    
+    // 如果有任何需要保存的配置
+    if (promises.length > 0) {
+        Promise.all(promises)
+            .then(results => {
+                const allSuccess = results.every(data => data.success);
+                if (allSuccess) {
+                    nextStep();
+                } else {
+                    const errors = results.filter(d => !d.success).map(d => d.error);
+                    alert('保存配置失败: ' + errors.join(', '));
+                }
+            })
+            .catch(error => {
+                alert('保存配置失败: ' + error);
+            });
+    } else {
+        nextStep();
+    }
 }
 
 // 单元格操作
@@ -1081,39 +1177,7 @@ function handleOperationKeydown(event, index, field) {
     }
 }
 
-function saveCellOperationsAndNext() {
-    const opElements = document.querySelectorAll('.operation-item');
-    const operations = Array.from(opElements).map((el, i) => {
-        const column = el.querySelector('.op-column').value;
-        const action = el.querySelector('.op-action').value;
-        const value = el.querySelector('.op-value').value;
-        return { column, action, value };
-    }).filter(op => op.column);
 
-    if (operations.length === 0) {
-        nextStep();
-        return;
-    }
-
-    fetch(`/api/tasks/${currentTaskId}/cell-operations/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            operations: operations
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            nextStep();
-        } else {
-            alert('保存操作失败: ' + data.error);
-        }
-    });
-}
 
 // 汇总
 function updateSummary() {
@@ -1135,6 +1199,14 @@ function updateSummary() {
         filterText += ` (${columnCount}列)`;
     }
     document.getElementById('summary-filter').textContent = filterText;
+    
+    // 清洗规则信息
+    document.getElementById('summary-cleaning').textContent = cleaningRulesList.length > 0 ? 
+        `${cleaningRulesList.length} 个规则` : '未配置';
+    
+    // 验证规则信息
+    document.getElementById('summary-validation').textContent = validationRulesList.length > 0 ? 
+        `${validationRulesList.length} 个规则` : '未配置';
     
     document.getElementById('summary-rule').textContent = document.getElementById('enable-column-rule').checked ? '已启用' : '未启用';
     document.getElementById('summary-ops').textContent = document.querySelectorAll('.operation-item').length + ' 个操作';
@@ -1267,6 +1339,832 @@ function loadExistingTask(taskId) {
         .catch(error => {
             alert('加载任务失败: ' + error);
         });
+}
+
+// ========== 新增功能函数 ==========
+
+// 模板管理
+async function loadTemplatesList() {
+    try {
+        const response = await fetch('/api/templates/');
+        const data = await response.json();
+        
+        const select = document.getElementById('template-select');
+        select.innerHTML = '<option value="">-- 选择模板 --</option>';
+        
+        data.templates.forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.id;
+            option.textContent = `${template.name} (${new Date(template.created_at).toLocaleDateString()})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('加载模板列表失败:', error);
+    }
+}
+
+async function loadSelectedTemplate() {
+    const templateId = document.getElementById('template-select').value;
+    if (!templateId) return;
+    
+    if (!confirm('应用模板将覆盖当前所有配置，是否继续？')) {
+        document.getElementById('template-select').value = '';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/templates/${templateId}/apply/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({task_id: currentTaskId})
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            alert('模板应用成功！配置已更新。');
+            // 重新加载任务数据
+            if (currentTaskId) {
+                loadExistingTask(currentTaskId);
+            }
+        } else {
+            alert('应用模板失败: ' + data.error);
+        }
+    } catch (error) {
+        alert('应用模板失败: ' + error);
+    }
+}
+
+async function saveCurrentTemplate() {
+    const templateName = document.getElementById('template-name-input').value.trim();
+    if (!templateName) {
+        alert('请输入模板名称');
+        return;
+    }
+    
+    if (!currentTaskId) {
+        alert('请先创建任务');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/templates/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                name: templateName,
+                task_id: currentTaskId
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            alert('模板保存成功！');
+            document.getElementById('template-name-input').value = '';
+            loadTemplatesList();
+        } else {
+            alert('保存模板失败: ' + data.error);
+        }
+    } catch (error) {
+        alert('保存模板失败: ' + error);
+    }
+}
+
+// 文件预览
+function updatePreviewFilesList() {
+    const container = document.getElementById('preview-files-list');
+    container.innerHTML = '';
+    
+    if (uploadedFiles.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">暂无已上传的文件</p>';
+        return;
+    }
+    
+    // 支持预览的文件格式
+    const supportedFormats = ['.xlsx', '.xls', '.csv'];
+    
+    uploadedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'preview-file-item';
+        fileItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem;';
+        
+        // 检查文件扩展名
+        const fileName = file.name.toLowerCase();
+        const isSupported = supportedFormats.some(ext => fileName.endsWith(ext));
+        
+        let buttonHTML = '';
+        if (isSupported) {
+            buttonHTML = `
+                <button type="button" class="btn btn-sm btn-info" onclick="previewFileData(${index})">
+                    <i class="fas fa-eye"></i> 预览数据
+                </button>
+            `;
+        } else {
+            buttonHTML = `
+                <span style="color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fas fa-info-circle"></i> 仅支持 Excel/CSV 预览
+                </span>
+            `;
+        }
+        
+        fileItem.innerHTML = `
+            <div>
+                <strong>${file.name}</strong>
+                <small style="color: var(--text-muted); margin-left: 1rem;">${file.size} bytes</small>
+            </div>
+            ${buttonHTML}
+        `;
+        container.appendChild(fileItem);
+    });
+}
+
+async function previewFileData(fileIndex) {
+    const file = uploadedFiles[fileIndex];
+    if (!file) return;
+    
+    try {
+        showLoading('正在生成预览...');
+        
+        const response = await fetch(`/api/files/${file.id}/preview/`, {
+            method: 'GET'
+        });
+        
+        hideLoading();
+        
+        const data = await response.json();
+        if (data.success) {
+            showPreviewModal(data.preview);
+        } else {
+            alert('预览失败: ' + data.error);
+        }
+    } catch (error) {
+        hideLoading();
+        alert('预览失败: ' + error);
+    }
+}
+
+function showPreviewModal(preview) {
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 2rem; border-radius: 8px; max-width: 90vw; max-height: 90vh; overflow: auto;';
+    
+    // 统计信息
+    let statsHTML = `
+        <h2 style="margin-bottom: 1rem;"><i class="fas fa-table"></i> 数据预览</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="padding: 1rem; background: #f0f9ff; border-radius: 4px;">
+                <div style="font-size: 0.9rem; color: #666;">总行数</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #0284c7;">${preview.total_rows}</div>
+            </div>
+            <div style="padding: 1rem; background: #f0fdf4; border-radius: 4px;">
+                <div style="font-size: 0.9rem; color: #666;">总列数</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #16a34a;">${preview.total_columns}</div>
+            </div>
+            <div style="padding: 1rem; background: #fef3c7; border-radius: 4px;">
+                <div style="font-size: 0.9rem; color: #666;">预览行数</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ca8a04;">${preview.preview_rows}</div>
+            </div>
+        </div>
+    `;
+    
+    // 列类型统计
+    if (preview.column_types) {
+        statsHTML += '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">列类型统计</h3>';
+        statsHTML += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
+        for (const [col, type] of Object.entries(preview.column_types)) {
+            statsHTML += `<span style="padding: 0.25rem 0.75rem; background: #e0e7ff; color: #4338ca; border-radius: 4px; font-size: 0.85rem;">${col}: ${type}</span>`;
+        }
+        statsHTML += '</div>';
+    }
+    
+    // 空值统计
+    if (preview.null_counts) {
+        const hasNulls = Object.values(preview.null_counts).some(count => count > 0);
+        if (hasNulls) {
+            statsHTML += '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">空值统计</h3>';
+            statsHTML += '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
+            for (const [col, count] of Object.entries(preview.null_counts)) {
+                if (count > 0) {
+                    statsHTML += `<span style="padding: 0.25rem 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 4px; font-size: 0.85rem;">${col}: ${count}个空值</span>`;
+                }
+            }
+            statsHTML += '</div>';
+        }
+    }
+    
+    // 数据表格
+    statsHTML += '<h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">数据预览 (前100行)</h3>';
+    statsHTML += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">';
+    statsHTML += '<thead><tr style="background: #f3f4f6;">';
+    preview.columns.forEach(col => {
+        statsHTML += `<th style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: left;">${col}</th>`;
+    });
+    statsHTML += '</tr></thead><tbody>';
+    
+    preview.data.forEach((row, idx) => {
+        statsHTML += `<tr style="${idx % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">`;
+        preview.columns.forEach(col => {
+            const value = row[col] !== null && row[col] !== undefined ? row[col] : '';
+            statsHTML += `<td style="padding: 0.5rem; border: 1px solid #e5e7eb;">${value}</td>`;
+        });
+        statsHTML += '</tr>';
+    });
+    
+    statsHTML += '</tbody></table></div>';
+    
+    statsHTML += `
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                <i class="fas fa-times"></i> 关闭
+            </button>
+        </div>
+    `;
+    
+    modalContent.innerHTML = statsHTML;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
+
+// 数据清洗规则
+function addCleaningRuleToList() {
+    const ruleType = document.getElementById('cleaning-rule-type').value;
+    const column = document.getElementById('cleaning-rule-column').value.trim();
+    const paramsStr = document.getElementById('cleaning-rule-params').value.trim();
+    
+    let params = {};
+    if (paramsStr) {
+        try {
+            params = JSON.parse(paramsStr);
+        } catch (e) {
+            alert('参数格式错误，请输入有效的JSON');
+            return;
+        }
+    }
+    
+    const rule = {
+        rule_type: ruleType,
+        column: column || null,
+        params: params
+    };
+    
+    cleaningRulesList.push(rule);
+    renderCleaningRules();
+    
+    // 清空输入
+    document.getElementById('cleaning-rule-column').value = '';
+    document.getElementById('cleaning-rule-params').value = '';
+}
+
+function renderCleaningRules() {
+    const container = document.getElementById('cleaning-rules-container');
+    container.innerHTML = '';
+    
+    if (cleaningRulesList.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">暂无清洗规则</p>';
+        return;
+    }
+    
+    const ruleTypeMap = {
+        'remove_duplicates': '去除重复行',
+        'fill_null': '填充空值',
+        'trim_whitespace': '去除空格',
+        'standardize_case': '标准化大小写',
+        'standardize_date': '标准化日期',
+        'remove_special_chars': '移除特殊字符',
+        'standardize_phone': '标准化电话号码'
+    };
+    
+    cleaningRulesList.forEach((rule, index) => {
+        const ruleItem = document.createElement('div');
+        ruleItem.style.cssText = 'padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
+        
+        ruleItem.innerHTML = `
+            <div>
+                <strong>${ruleTypeMap[rule.rule_type] || rule.rule_type}</strong>
+                ${rule.column ? ` - 列: ${rule.column}` : ' - 全部列'}
+                ${Object.keys(rule.params).length > 0 ? ` - 参数: ${JSON.stringify(rule.params)}` : ''}
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeCleaningRule(${index})">
+                <i class="fas fa-trash"></i> 删除
+            </button>
+        `;
+        container.appendChild(ruleItem);
+    });
+}
+
+function removeCleaningRule(index) {
+    cleaningRulesList.splice(index, 1);
+    renderCleaningRules();
+}
+
+// 数据验证规则
+function addValidationRuleToList() {
+    const ruleType = document.getElementById('validation-rule-type').value;
+    const column = document.getElementById('validation-rule-column').value.trim();
+    const paramsStr = document.getElementById('validation-rule-params').value.trim();
+    
+    if (!column) {
+        alert('请输入验证列名');
+        return;
+    }
+    
+    let params = {};
+    if (paramsStr) {
+        try {
+            params = JSON.parse(paramsStr);
+        } catch (e) {
+            alert('参数格式错误，请输入有效的JSON');
+            return;
+        }
+    }
+    
+    const rule = {
+        rule_type: ruleType,
+        column: column,
+        params: params
+    };
+    
+    validationRulesList.push(rule);
+    renderValidationRules();
+    
+    // 清空输入
+    document.getElementById('validation-rule-column').value = '';
+    document.getElementById('validation-rule-params').value = '';
+}
+
+function renderValidationRules() {
+    const container = document.getElementById('validation-rules-container');
+    container.innerHTML = '';
+    
+    if (validationRulesList.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">暂无验证规则</p>';
+        return;
+    }
+    
+    const ruleTypeMap = {
+        'type_check': '类型检查',
+        'range_check': '范围验证',
+        'regex_match': '正则匹配',
+        'not_null': '非空检查',
+        'unique': '唯一性检查',
+        'length_check': '长度检查',
+        'enum_check': '枚举值检查'
+    };
+    
+    validationRulesList.forEach((rule, index) => {
+        const ruleItem = document.createElement('div');
+        ruleItem.style.cssText = 'padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
+        
+        ruleItem.innerHTML = `
+            <div>
+                <strong>${ruleTypeMap[rule.rule_type] || rule.rule_type}</strong>
+                - 列: ${rule.column}
+                ${Object.keys(rule.params).length > 0 ? ` - 参数: ${JSON.stringify(rule.params)}` : ''}
+            </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeValidationRule(${index})">
+                <i class="fas fa-trash"></i> 删除
+            </button>
+        `;
+        container.appendChild(ruleItem);
+    });
+}
+
+function removeValidationRule(index) {
+    validationRulesList.splice(index, 1);
+    renderValidationRules();
+}
+
+async function runDataValidation() {
+    if (!currentTaskId) {
+        alert('请先创建任务');
+        return;
+    }
+    
+    if (validationRulesList.length === 0) {
+        alert('请先添加验证规则');
+        return;
+    }
+    
+    try {
+        showLoading('正在验证数据...');
+        
+        // 先添加验证规则
+        await fetch('/api/validation-rules/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                task_id: currentTaskId,
+                rules: validationRulesList
+            })
+        });
+        
+        // 运行验证
+        const response = await fetch(`/api/tasks/${currentTaskId}/validate/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        hideLoading();
+        
+        const data = await response.json();
+        if (data.success) {
+            displayValidationResults(data.results);
+        } else {
+            alert('验证失败: ' + data.error);
+        }
+    } catch (error) {
+        hideLoading();
+        alert('验证失败: ' + error);
+    }
+}
+
+function displayValidationResults(results) {
+    const container = document.getElementById('validation-results');
+    
+    if (results.length === 0) {
+        container.innerHTML = '<div style="padding: 1rem; background: #d1fae5; color: #065f46; border-radius: 4px;"><i class="fas fa-check-circle"></i> 数据验证通过，未发现错误！</div>';
+        return;
+    }
+    
+    let html = `<div style="padding: 1rem; background: #fee2e2; color: #991b1b; border-radius: 4px; margin-bottom: 1rem;">
+        <strong><i class="fas fa-exclamation-triangle"></i> 发现 ${results.length} 个验证错误</strong>
+    </div>`;
+    
+    html += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; padding: 1rem;">';
+    results.forEach((result, index) => {
+        html += `
+            <div style="padding: 0.75rem; border-left: 3px solid #dc2626; background: #fef2f2; margin-bottom: 0.5rem; border-radius: 4px;">
+                <div><strong>错误 ${index + 1}:</strong> ${result.error_message}</div>
+                <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                    行: ${result.row_number}, 列: ${result.column}, 规则: ${result.rule_type}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// 生成统计图表
+async function generateChartsForTask() {
+    if (!currentTaskId) {
+        alert('请先创建并处理任务');
+        return;
+    }
+
+    try {
+        showLoading('正在生成统计图表...');
+
+        const response = await fetch(`/api/tasks/${currentTaskId}/charts/`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        let payload;
+
+        if (contentType.includes('application/json')) {
+            payload = await response.json();
+        } else {
+            const text = await response.text();
+            throw new Error(text || `服务返回了非 JSON 响应 (HTTP ${response.status})`);
+        }
+
+        if (!response.ok) {
+            const errorMsg = payload?.error || `生成图表失败 (HTTP ${response.status})`;
+            throw new Error(errorMsg);
+        }
+
+        if (payload.success) {
+            if (payload.warning) {
+                showToast(payload.warning, 'warning');
+            }
+            showChartsModal(payload.charts, payload.warning, payload.statistics);
+        } else {
+            throw new Error(payload.error || '未知错误');
+        }
+    } catch (error) {
+        showToast(`生成图表失败: ${error.message || error}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function showChartsModal(charts, warning = null, statistics = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 2rem; border-radius: 8px; max-width: 90vw; max-height: 90vh; overflow: auto;';
+    
+    let html = '<h2 style="margin-bottom: 1.5rem;"><i class="fas fa-chart-bar"></i> 统计图表</h2>';
+    
+    // 显示警告信息
+    if (warning) {
+        html += `
+            <div style="padding: 1rem; background: #fef3c7; color: #92400e; border-radius: 4px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+                <i class="fas fa-exclamation-triangle"></i> ${warning}
+            </div>
+        `;
+    }
+    
+    const chartSections = [];
+    if (charts?.data_distribution) chartSections.push(charts.data_distribution);
+    if (charts?.column_types) chartSections.push(charts.column_types);
+    if (charts?.null_analysis) chartSections.push(charts.null_analysis);
+    if (charts?.numeric_stats) chartSections.push(charts.numeric_stats);
+    if (charts?.text_frequency) chartSections.push(charts.text_frequency);
+
+    if (chartSections.length === 0) {
+        html += '<p style="color: var(--text-muted);">暂无可用的统计图表。请确保已上传支持的文件格式（Excel 或 CSV）。</p>';
+    } else {
+        html += '<div style="display: grid; gap: 2rem;">';
+        chartSections.forEach(chart => {
+            html += `
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">${chart.title}</h3>
+                    <div>${renderChartHTML(chart)}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    
+    if (statistics && Object.keys(statistics).length > 0) {
+        html += `
+            <div style="margin-top: 2rem;">
+                <h3 style="margin-bottom: 1rem;"><i class="fas fa-chart-line"></i> 数值统计摘要</h3>
+                <div style="display: grid; gap: 0.75rem;">
+                    ${Object.entries(statistics).map(([column, stats]) => `
+                        <div style="padding: 0.75rem; background: #f3f4f6; border-radius: 6px;">
+                            <strong>${column}</strong>
+                            <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.5rem;">
+                                ${stats.min !== undefined ? `<span>最小值: ${stats.min.toFixed(2)}</span>` : ''}
+                                ${stats.max !== undefined ? `<span>最大值: ${stats.max.toFixed(2)}</span>` : ''}
+                                ${stats.mean !== undefined ? `<span>平均值: ${stats.mean.toFixed(2)}</span>` : ''}
+                                ${stats.median !== undefined ? `<span>中位数: ${stats.median.toFixed(2)}</span>` : ''}
+                                ${stats.count !== undefined ? `<span>数据量: ${stats.count}</span>` : ''}
+                                ${stats.unique_count !== undefined ? `<span>唯一值: ${stats.unique_count}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    html += `
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                <i class="fas fa-times"></i> 关闭
+            </button>
+        </div>
+    `;
+    
+    modalContent.innerHTML = html;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
+
+function renderChartHTML(chart) {
+    if (chart.type === 'bar') {
+        return renderBarChart(chart.data);
+    } else if (chart.type === 'pie') {
+        return renderPieChart(chart.data);
+    } else if (chart.type === 'line') {
+        return renderLineChart(chart.data);
+    } else if (chart.type === 'boxplot') {
+        return renderBoxPlot(chart.data);
+    } else if (chart.type === 'wordcloud') {
+        return renderWordCloud(chart.data);
+    }
+    return '<p>不支持的图表类型</p>';
+}
+
+function renderBarChart(data) {
+    const categories = Array.isArray(data?.categories) ? data.categories : Object.keys(data || {});
+    const values = Array.isArray(data?.values) ? data.values : Object.values(data || {});
+    const maxValue = values.length > 0 ? Math.max(...values, 0) : 0;
+    let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+    
+    categories.forEach((label, index) => {
+        const value = Number(values[index] ?? 0);
+        const denominator = maxValue === 0 ? 1 : maxValue;
+        const percentage = ((value / denominator) * 100).toFixed(1);
+        html += `
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <span>${label}</span>
+                    <span><strong>${value}</strong></span>
+                </div>
+                <div style="background: #e5e7eb; border-radius: 4px; height: 24px; overflow: hidden;">
+                    <div style="background: linear-gradient(to right, #3b82f6, #2563eb); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+function renderPieChart(data) {
+    const labels = Array.isArray(data?.labels) ? data.labels : Object.keys(data || {});
+    const values = Array.isArray(data?.values) ? data.values : Object.values(data || {});
+    const total = values.reduce((a, b) => a + Number(b || 0), 0);
+    let html = '<div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">';
+    
+    // 简单的颜色列表
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+    
+    html += '<div style="flex: 1; min-width: 200px;">';
+    const segments = [];
+    
+    labels.forEach((label, index) => {
+        const value = Number(values[index] ?? 0);
+        const percent = total === 0 ? 0 : (value / total * 100);
+        segments.push({
+            label,
+            value,
+            percentage: percent.toFixed(1),
+            color: colors[index % colors.length]
+        });
+    });
+    
+    // 图例
+    html += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+    segments.forEach(seg => {
+        html += `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 16px; height: 16px; background: ${seg.color}; border-radius: 2px;"></div>
+                <span>${seg.label}: ${seg.value} (${seg.percentage}%)</span>
+            </div>
+        `;
+    });
+    html += '</div></div>';
+    
+    html += '</div>';
+    return html;
+}
+
+function renderLineChart(data) {
+    // 简化的折线图显示（与柱状图共享同一数据结构）
+    return renderBarChart(data);
+}
+
+function renderBoxPlot(data) {
+    if (!data || data.length === 0) {
+        return '<p style="color: var(--text-muted);">没有可用的数值统计数据。</p>';
+    }
+
+    let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; min-width: 600px;">';
+    html += '<thead><tr style="background: #f9fafb;">'
+        + '<th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">列名</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">最小值</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">第一四分位</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">中位数</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">第三四分位</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">最大值</th>'
+        + '<th style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">样本量</th>'
+        + '</tr></thead><tbody>';
+
+    data.forEach(row => {
+        html += '<tr>'
+            + `<td style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">${row.column}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.min.toFixed(2)}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.q1.toFixed(2)}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.median.toFixed(2)}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.q3.toFixed(2)}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.max.toFixed(2)}</td>`
+            + `<td style="padding: 0.5rem; text-align: right; border-bottom: 1px solid var(--border-color);">${row.count}</td>`
+            + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    return html;
+}
+
+function renderWordCloud(data) {
+    if (!data || Object.keys(data).length === 0) {
+        return '<p style="color: var(--text-muted);">没有可用的文本频率数据。</p>';
+    }
+
+    let html = '<div style="display: grid; gap: 1rem;">';
+    Object.entries(data).forEach(([column, stats]) => {
+        const items = stats.most_common || [];
+        html += '<div style="padding: 1rem; background: #f9fafb; border-radius: 6px;">'
+            + `<h4 style="margin-bottom: 0.75rem; font-size: 1rem;">${column}</h4>`
+            + `<p style="margin-bottom: 0.75rem; color: var(--text-muted);">总计: ${stats.total_count} | 唯一值: ${stats.unique_count}</p>`
+            + '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">'
+            + items.map(([value, count]) => `
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: #e0f2fe; color: #0369a1; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.9rem;">
+                    <span>${value}</span>
+                    <span style="background: rgba(255,255,255,0.7); color: #0f172a; padding: 0 0.4rem; border-radius: 999px; font-size: 0.8rem;">${count}</span>
+                </span>
+            `).join('')
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function showLoading(message = '加载中...') {
+    const loading = document.createElement('div');
+    loading.id = 'loading-overlay';
+    loading.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+    loading.innerHTML = `<div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;"><div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div><div>${message}</div></div>`;
+    document.body.appendChild(loading);
+}
+
+function hideLoading() {
+    const loading = document.getElementById('loading-overlay');
+    if (loading) {
+        loading.remove();
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        z-index: 10001;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+    `;
+    
+    const colors = {
+        success: '#10b981',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="fas ${icons[type]}" style="color: ${colors[type]}; font-size: 1.5rem;"></i>
+        <span style="color: #333;">${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 自动隐藏
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// 添加动画样式
+if (!document.getElementById('toast-animations')) {
+    const style = document.createElement('style');
+    style.id = 'toast-animations';
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 </script>

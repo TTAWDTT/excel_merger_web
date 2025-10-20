@@ -19,6 +19,9 @@
                 <a href="{% url 'index' %}" class="nav-item"><i class="fas fa-home"></i> 首页</a>
                 <a href="{% url 'task_list' %}" class="nav-item"><i class="fas fa-list"></i> 任务列表</a>
                 <a href="{% url 'task_create' %}" class="nav-item"><i class="fas fa-plus-circle"></i> 创建任务</a>
+                <button class="theme-toggle" id="themeToggle" title="切换主题" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -46,6 +49,7 @@
     </div>
 
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/enhancements.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

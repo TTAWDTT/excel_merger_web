@@ -4,28 +4,42 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>{{ task.name }}</h1>
+    <div>
+        <h1><i class="fas fa-file-excel"></i> {{ task.name }}</h1>
+        <span class="status-badge status-{{ task.status }}" style="margin-top: 0.5rem;">
+            {% if task.status == 'completed' %}<i class="fas fa-check-circle"></i>{% endif %}
+            {% if task.status == 'pending' %}<i class="fas fa-clock"></i>{% endif %}
+            {% if task.status == 'processing' %}<i class="fas fa-spinner fa-spin"></i>{% endif %}
+            {% if task.status == 'failed' %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+            {{ task.get_status_display }}
+        </span>
+    </div>
     <div class="header-actions">
         {% if task.result_file %}
-        <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-success">下载结果</a>
+        <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-success">
+            <i class="fas fa-download"></i> 下载结果
+        </a>
         {% endif %}
-        <button class="btn btn-danger" onclick="deleteTask({{ task.id }})">删除任务</button>
+        {% if task.status == 'pending' or task.status == 'failed' %}
+        <a href="{% url 'task_create' %}?task_id={{ task.id }}" class="btn btn-primary">
+            <i class="fas fa-play"></i> 继续处理
+        </a>
+        {% endif %}
+        <button class="btn btn-danger" onclick="deleteTask({{ task.id }})">
+            <i class="fas fa-trash"></i> 删除任务
+        </button>
     </div>
 </div>
 
 <div class="detail-grid">
     <div class="detail-card">
-        <h3>基本信息</h3>
+        <h3><i class="fas fa-info-circle"></i> 基本信息</h3>
         <div class="detail-item">
-            <span class="label">状态:</span>
-            <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+            <span class="label"><i class="fas fa-file-export"></i> 输出格式:</span>
+            <span class="format-badge">{{ task.output_format|upper }}</span>
         </div>
         <div class="detail-item">
-            <span class="label">输出格式:</span>
-            <span>{{ task.output_format|upper }}</span>
-        </div>
-        <div class="detail-item">
-            <span class="label">列过滤:</span>
+            <span class="label"><i class="fas fa-filter"></i> 列过滤:</span>
             <span>
                 {% if task.filter_mode == 'none' %}
                     不过滤
@@ -37,41 +51,41 @@
             </span>
         </div>
         <div class="detail-item">
-            <span class="label">创建时间:</span>
+            <span class="label"><i class="fas fa-calendar-plus"></i> 创建时间:</span>
             <span>{{ task.created_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         <div class="detail-item">
-            <span class="label">更新时间:</span>
+            <span class="label"><i class="fas fa-calendar-check"></i> 更新时间:</span>
             <span>{{ task.updated_at|date:"Y-m-d H:i:s" }}</span>
         </div>
         {% if task.error_message %}
         <div class="detail-item error">
-            <span class="label">错误信息:</span>
+            <span class="label"><i class="fas fa-exclamation-triangle"></i> 错误信息:</span>
             <span>{{ task.error_message }}</span>
         </div>
         {% endif %}
     </div>
 
     <div class="detail-card">
-        <h3>上传文件 ({{ task.files.count }})</h3>
+        <h3><i class="fas fa-folder-open"></i> 上传文件 ({{ task.files.count }})</h3>
         <ul class="file-list">
             {% for file in task.files.all %}
             <li>
-                <span class="file-icon">📄</span>
+                <i class="fas fa-file-excel" style="color: var(--success-color); margin-right: 0.5rem;"></i>
                 {{ file.original_filename }}
             </li>
             {% empty %}
-            <li class="empty">未上传文件</li>
+            <li class="empty"><i class="fas fa-inbox"></i> 未上传文件</li>
             {% endfor %}
         </ul>
     </div>
 
     {% if task.filter_mode != 'none' and task.filter_columns %}
     <div class="detail-card">
-        <h3>过滤列列表</h3>
+        <h3><i class="fas fa-filter"></i> 过滤列列表</h3>
         <ul class="file-list">
             {% for col in task.filter_columns %}
-            <li>{{ col }}</li>
+            <li><i class="fas fa-columns" style="color: var(--primary-color); margin-right: 0.5rem;"></i> {{ col }}</li>
             {% endfor %}
         </ul>
     </div>
@@ -79,23 +93,23 @@
 
     {% if task.column_rule %}
     <div class="detail-card">
-        <h3>列派生规则</h3>
+        <h3><i class="fas fa-magic"></i> 列派生规则</h3>
         <div class="detail-item">
-            <span class="label">源列:</span>
-            <span>{{ task.column_rule.source_column }}</span>
+            <span class="label"><i class="fas fa-arrow-right"></i> 源列:</span>
+            <span><strong>{{ task.column_rule.source_column }}</strong></span>
         </div>
         <div class="detail-item">
-            <span class="label">新列:</span>
-            <span>{{ task.column_rule.new_column }}</span>
+            <span class="label"><i class="fas fa-plus-circle"></i> 新列:</span>
+            <span><strong>{{ task.column_rule.new_column }}</strong></span>
         </div>
         {% if task.column_rule.extraction_start %}
         <div class="detail-item">
-            <span class="label">提取范围:</span>
-            <span>{{ task.column_rule.extraction_start }} - {{ task.column_rule.extraction_end }}</span>
+            <span class="label"><i class="fas fa-cut"></i> 提取范围:</span>
+            <span>位置 {{ task.column_rule.extraction_start }} - {{ task.column_rule.extraction_end }}</span>
         </div>
         {% endif %}
         <div class="detail-item">
-            <span class="label">映射规则:</span>
+            <span class="label"><i class="fas fa-exchange-alt"></i> 映射规则:</span>
             <span>{{ task.column_rule.mappings|length }} 条</span>
         </div>
     </div>
@@ -103,12 +117,13 @@
 
     {% if task.cell_operations.count > 0 %}
     <div class="detail-card">
-        <h3>单元格操作 ({{ task.cell_operations.count }})</h3>
+        <h3><i class="fas fa-edit"></i> 单元格操作 ({{ task.cell_operations.count }})</h3>
         <ul class="operation-list">
             {% for op in task.cell_operations.all %}
             <li>
+                <i class="fas fa-wrench" style="color: var(--warning-color); margin-right: 0.5rem;"></i>
                 <strong>{{ op.column }}</strong>: {{ op.get_action_display }}
-                {% if op.value %}- {{ op.value }}{% endif %}
+                {% if op.value %}<code style="background: var(--bg-color); padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.9em;">{{ op.value }}</code>{% endif %}
             </li>
             {% endfor %}
         </ul>
