@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}图表实验室 - Excel 合并工具{% endblock %}
+
+{% block extra_css %}
+<style>
+.chart-lab-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.chart-section {
+    background: var(--card-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.chart-section:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-header .section-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    border-radius: 12px;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.panel-hint {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.form-group label i {
+    color: var(--primary-color);
+    margin-right: 0.25rem;
+}
+
+.table-scroll {
+    max-height: 400px;
+    overflow: auto;
+    margin-top: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.table-scroll table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-scroll thead {
+    position: sticky;
+    top: 0;
+    background: var(--primary-color);
+    color: white;
+    z-index: 10;
+}
+
+.table-scroll th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.table-scroll td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.table-scroll tbody tr:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.config-section {
+    background: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.config-section h4 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-badge button {
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.filter-badge button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.chart-display {
+    text-align: center;
+    padding: 2rem;
+    background: var(--bg-color);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-display img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.stat-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card h4 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.warning-banner {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    background: rgba(249, 115, 22, 0.1);
+    border-left: 4px solid var(--warning-color);
+    color: var(--text-color);
+    display: flex;
+    align-items: start;
+    gap: 0.75rem;
+}
+
+.warning-banner i {
+    color: var(--warning-color);
+    font-size: 1.25rem;
+    margin-top: 0.1rem;
+}
+
+.summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    border-radius: 0.75rem;
+    margin-top: 1.5rem;
+    box-shadow: var(--shadow-md);
+}
+
+.summary-item {
+    flex: 1 1 180px;
+    text-align: center;
+    color: white;
+}
+
+.summary-item span {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-bottom: 0.25rem;
+}
+
+.summary-item strong {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.wizard-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .stat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-flask"></i> 图表实验室</h1>
+    <p>快速探索数据、生成专业统计图表，无需创建合并任务</p>
+    <div class="badge-group" style="margin-top: 0.75rem;">
+        <span class="badge"><i class="fas fa-chart-line"></i> pandas · matplotlib</span>
+        <span class="badge"><i class="fas fa-bolt"></i> 即时预览</span>
+        <span class="badge"><i class="fas fa-filter"></i> 条件过滤</span>
+    </div>
+</div>
+
+<div class="chart-lab-container">
+    <!-- 步骤 1: 数据上传与预览 -->
+    <section class="chart-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-upload"></i>
+            </div>
+            <div>
+                <h2>步骤 1: 数据上传与预览</h2>
+                <p class="panel-hint" style="margin: 0;">上传 Excel/CSV/JSON 文件，自动识别列结构和数据类型</p>
+            </div>
+        </div>
+
+        <form id="inspectForm">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label for="dataFile"><i class="fas fa-file-excel"></i> 选择数据文件</label>
+                    <input type="file" id="dataFile" name="file" class="form-control" accept=".xlsx,.xls,.csv,.json" required>
+                    <small class="form-hint"><i class="fas fa-info-circle"></i> 支持 XLSX, XLS, CSV, JSON 格式，预览最多 50,000 行</small>
+                </div>
+                <div class="form-group">
+                    <label for="sheetName"><i class="fas fa-table"></i> 工作表名称 (可选)</label>
+                    <input type="text" id="sheetName" name="sheet_name" class="form-control" placeholder="默认第一个工作表">
+                </div>
+                <div class="form-group">
+                    <label for="previewRows"><i class="fas fa-list-ol"></i> 预览行数</label>
+                    <input type="number" id="previewRows" name="preview_rows" class="form-control" value="30" min="5" max="200">
+                </div>
+            </div>
+
+            <div class="wizard-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-eye"></i> 生成数据预览
+                </button>
+                <button type="button" class="btn btn-secondary" id="resetInspectBtn">
+                    <i class="fas fa-undo"></i> 重置
+                </button>
+            </div>
+        </form>
+
+        <div id="inspectSummary" class="summary-bar" style="display:none;"></div>
+        <div id="previewContainer" class="table-scroll" style="display:none;"></div>
+        <div id="statisticsContainer" class="stat-grid" style="display:none;"></div>
+    </section>
+
+    <!-- 步骤 2: 图表配置 -->
+    <section class="chart-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-sliders-h"></i>
+            </div>
+            <div>
+                <h2>步骤 2: 图表配置</h2>
+                <p class="panel-hint" style="margin: 0;">选择维度、指标与样式，支持分组聚合和条件过滤</p>
+            </div>
+        </div>
+        <div class="config-section">
+            <h4><i class="fas fa-chart-bar"></i> 基本设置</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="chartType"><i class="fas fa-shapes"></i> 图表类型</label>
+                    <select id="chartType" class="form-control">
+                        <option value="bar">柱状图</option>
+                        <option value="line">折线图</option>
+                        <option value="scatter">散点图</option>
+                        <option value="hist">直方图</option>
+                        <option value="box">箱线图</option>
+                        <option value="pie">饼图</option>
+                        <option value="area">面积图</option>
+                        <option value="barh">条形图</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="xAxis"><i class="fas fa-arrows-alt-h"></i> X 轴字段</label>
+                    <select id="xAxis" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="yAxis"><i class="fas fa-arrows-alt-v"></i> Y 轴字段 (可多选)</label>
+                    <select id="yAxis" class="form-control" multiple style="height: 38px;"></select>
+                    <small class="form-hint"><i class="fas fa-info-circle"></i> 按住 Ctrl/Cmd 多选</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h4><i class="fas fa-layer-group"></i> 数据聚合 (可选)</h4>
+            <div class="info-box" style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 12px; margin-bottom: 16px; border-radius: 4px;">
+                <i class="fas fa-info-circle" style="color: #2196F3; margin-right: 8px;"></i>
+                <strong>使用提示:</strong> 当需要对数据进行分组统计时使用本功能。例如:
+                <ul style="margin: 8px 0 0 24px; line-height: 1.8;">
+                    <li>按<strong>城市</strong>分组,对<strong>销售额</strong>求和 → 查看各城市总销售额</li>
+                    <li>按<strong>日期</strong>分组,对<strong>访问量</strong>平均 → 查看每日平均访问量</li>
+                    <li>按<strong>类别+地区</strong>分组,对<strong>数量</strong>计数 → 统计各类别在各地区的数量</li>
+                </ul>
+                <small style="color: #555; display: block; margin-top: 8px;">💡 <em>不选择分组字段则直接对原始数据绘图</em></small>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="groupBy"><i class="fas fa-object-group"></i> 分组字段 (可多选)</label>
+                    <select id="groupBy" class="form-control" multiple style="height: 38px;"></select>
+                    <small class="form-hint"><i class="fas fa-info-circle"></i> 按住 Ctrl/Cmd 多选多个分组维度</small>
+                </div>
+                <div class="form-group">
+                    <label for="aggregateFunc"><i class="fas fa-calculator"></i> 聚合方式</label>
+                    <select id="aggregateFunc" class="form-control">
+                        <option value="sum">求和 (sum)</option>
+                        <option value="mean">平均值 (mean)</option>
+                        <option value="count">计数 (count)</option>
+                        <option value="max">最大值 (max)</option>
+                        <option value="min">最小值 (min)</option>
+                        <option value="median">中位数 (median)</option>
+                    </select>
+                    <small class="form-hint"><i class="fas fa-info-circle"></i> 选择对分组后的数值字段进行何种计算</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h4><i class="fas fa-paint-brush"></i> 样式设置</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="chartTitle"><i class="fas fa-heading"></i> 图表标题</label>
+                    <input type="text" id="chartTitle" class="form-control" placeholder="自定义标题 (可选)">
+                </div>
+                <div class="form-group">
+                    <label for="xLabel"><i class="fas fa-text-width"></i> X 轴名称</label>
+                    <input type="text" id="xLabel" class="form-control" placeholder="默认使用字段名">
+                </div>
+                <div class="form-group">
+                    <label for="yLabel"><i class="fas fa-text-height"></i> Y 轴名称</label>
+                    <input type="text" id="yLabel" class="form-control" placeholder="默认使用字段名">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="chartWidth"><i class="fas fa-ruler-horizontal"></i> 宽度 (英寸)</label>
+                    <input type="number" id="chartWidth" class="form-control" value="10" min="4" max="20" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label for="chartHeight"><i class="fas fa-ruler-vertical"></i> 高度 (英寸)</label>
+                    <input type="number" id="chartHeight" class="form-control" value="6" min="3" max="16" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label for="xRotation"><i class="fas fa-sync-alt"></i> X 轴刻度角度</label>
+                    <input type="number" id="xRotation" class="form-control" value="0" min="-90" max="90">
+                </div>
+                <div class="form-group">
+                    <label for="bins"><i class="fas fa-bars"></i> 直方图区间数</label>
+                    <input type="number" id="bins" class="form-control" value="20" min="5" max="100">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="autopct"><i class="fas fa-percentage"></i> 饼图百分比格式</label>
+                    <input type="text" id="autopct" class="form-control" value="%1.1f%%">
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 1.5rem; padding-top: 2rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                        <input type="checkbox" id="showGrid" checked>
+                        <span>显示网格</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                        <input type="checkbox" id="showLegend" checked>
+                        <span>显示图例</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h4><i class="fas fa-filter"></i> 数据过滤条件 (可选)</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="filterColumn"><i class="fas fa-columns"></i> 字段</label>
+                    <select id="filterColumn" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="filterOperator"><i class="fas fa-equals"></i> 条件</label>
+                    <select id="filterOperator" class="form-control">
+                        <option value="==">等于</option>
+                        <option value="!=">不等于</option>
+                        <option value=">">大于</option>
+                        <option value=">=">大于等于</option>
+                        <option value="<">小于</option>
+                        <option value="<=">小于等于</option>
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="in">包含任意</option>
+                        <option value="not_in">排除</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filterValue"><i class="fas fa-keyboard"></i> 值 / 关键字</label>
+                    <input type="text" id="filterValue" class="form-control" placeholder="多个值用逗号分隔">
+                </div>
+                <div class="form-group" style="align-self: flex-end;">
+                    <button type="button" class="btn btn-secondary" id="addFilterBtn">
+                        <i class="fas fa-plus"></i> 添加条件
+                    </button>
+                </div>
+            </div>
+            <div id="filterList" class="filter-badges"></div>
+        </div>
+
+        <div class="wizard-actions">
+            <button type="button" class="btn btn-primary btn-lg" id="generateChartBtn" disabled>
+                <i class="fas fa-chart-line"></i> 生成图表
+            </button>
+        </div>
+
+        <div id="chartWarnings" class="warning-banner" style="display:none;"></div>
+    </section>
+
+    <!-- 步骤 3: 图表结果 -->
+    <section class="chart-section">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-chart-area"></i>
+            </div>
+            <div>
+                <h2>步骤 3: 图表结果</h2>
+                <p class="panel-hint" style="margin: 0;">生成的图表和统计信息将在此展示</p>
+            </div>
+        </div>
+
+        <div id="chartOutput" class="chart-display">
+            <div style="text-align: center; color: var(--text-muted);">
+                <i class="fas fa-chart-pie" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>完成上述配置后，点击"生成图表"按钮，图表将在此处展示</p>
+            </div>
+        </div>
+
+        <div id="chartStats" class="stat-grid" style="display:none;"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.chartLabConfig = {
+        inspectUrl: "{% url 'api_custom_chart_inspect' %}",
+        generateUrl: "{% url 'api_generate_custom_chart' %}"
+    };
+</script>
+<script src="{% static 'js/chart_lab.js' %}"></script>
+{% endblock %}

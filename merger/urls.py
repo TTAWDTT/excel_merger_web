@@ -7,6 +7,7 @@ urlpatterns = [
     path('tasks/', views.task_list, name='task_list'),
     path('tasks/create/', views.task_create, name='task_create'),
     path('tasks/<int:task_id>/', views.task_detail, name='task_detail'),
+    path('charts/lab/', views.chart_lab, name='chart_lab'),
     
     # API 路由 - 任务相关
     path('api/tasks/create/', views.api_create_task, name='api_create_task'),
@@ -36,4 +37,6 @@ urlpatterns = [
     
     # API 路由 - 可视化图表
     path('api/tasks/<int:task_id>/charts/', views.api_generate_charts, name='api_generate_charts'),
+    path('api/charts/inspect/', views.api_custom_chart_inspect, name='api_custom_chart_inspect'),
+    path('api/charts/custom/', views.api_generate_custom_chart, name='api_generate_custom_chart'),
 ]
