@@ -4,43 +4,54 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>任务列表</h1>
-    <a href="{% url 'task_create' %}" class="btn btn-primary">创建新任务</a>
+    <h1><i class="fas fa-tasks"></i> 任务列表</h1>
+    <a href="{% url 'task_create' %}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> 创建新任务</a>
 </div>
 
-<div class="task-table">
+<div class="task-table glass-card">
     <table>
         <thead>
             <tr>
-                <th>任务名称</th>
-                <th>状态</th>
-                <th>输出格式</th>
-                <th>文件数量</th>
-                <th>创建时间</th>
-                <th>操作</th>
+                <th><i class="fas fa-tag"></i> 任务名称</th>
+                <th><i class="fas fa-info-circle"></i> 状态</th>
+                <th><i class="fas fa-file-alt"></i> 输出格式</th>
+                <th><i class="fas fa-folder"></i> 文件数量</th>
+                <th><i class="fas fa-clock"></i> 创建时间</th>
+                <th><i class="fas fa-cog"></i> 操作</th>
             </tr>
         </thead>
         <tbody>
             {% for task in tasks %}
             <tr>
-                <td><a href="{% url 'task_detail' task.id %}">{{ task.name }}</a></td>
-                <td><span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span></td>
-                <td>{{ task.output_format|upper }}</td>
-                <td>{{ task.files.count }}</td>
-                <td>{{ task.created_at|date:"Y-m-d H:i" }}</td>
-                <td>
-                    <a href="{% url 'task_detail' task.id %}" class="btn btn-sm">查看</a>
+                <td><a href="{% url 'task_detail' task.id %}" class="task-link"><i class="fas fa-file-excel"></i> {{ task.name }}</a></td>
+                <td><span class="status-badge status-{{ task.status }}">
+                    {% if task.status == 'completed' %}<i class="fas fa-check-circle"></i>{% endif %}
+                    {% if task.status == 'pending' %}<i class="fas fa-clock"></i>{% endif %}
+                    {% if task.status == 'processing' %}<i class="fas fa-spinner fa-spin"></i>{% endif %}
+                    {% if task.status == 'failed' %}<i class="fas fa-exclamation-circle"></i>{% endif %}
+                    {{ task.get_status_display }}</span></td>
+                <td><span class="format-badge">{{ task.output_format|upper }}</span></td>
+                <td><span class="file-count"><i class="fas fa-copy"></i> {{ task.files.count }}</span></td>
+                <td><i class="fas fa-calendar-alt"></i> {{ task.created_at|date:"Y-m-d H:i" }}</td>
+                <td class="action-buttons">
+                    <a href="{% url 'task_detail' task.id %}" class="btn btn-sm" title="查看详情"><i class="fas fa-eye"></i> 查看</a>
                     {% if task.status == 'pending' or task.status == 'failed' %}
-                    <a href="{% url 'task_create' %}?task_id={{ task.id }}" class="btn btn-sm btn-primary">继续处理</a>
+                    <a href="{% url 'task_create' %}?task_id={{ task.id }}" class="btn btn-sm btn-primary" title="继续处理"><i class="fas fa-play"></i> 继续处理</a>
                     {% endif %}
                     {% if task.result_file %}
-                    <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-sm btn-success">下载</a>
+                    <a href="/api/tasks/{{ task.id }}/download/" class="btn btn-sm btn-success" title="下载结果"><i class="fas fa-download"></i> 下载</a>
                     {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="empty-state">暂无任务</td>
+                <td colspan="6" class="empty-state">
+                    <div class="empty-state-content">
+                        <i class="fas fa-inbox fa-3x"></i>
+                        <p>暂无任务</p>
+                        <a href="{% url 'task_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> 创建第一个任务</a>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
